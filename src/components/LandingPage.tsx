@@ -2,7 +2,6 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import svgPaths from "../imports/svg-0x5486gjrj";
-// @ts-ignore: module provided by Figma import resolver at build time
 import imgGoogleLogoNoBg1 from "../assets/google-logo-no-bg.png";
 import { createClient } from "../utils/supabase/client";
 import { signUp } from "../utils/api";
@@ -557,7 +556,7 @@ export default function LandingPage({ onLogin }: LandingPageProps) {
 
       {/* Mobile/Tablet Version */}
       <div className="lg:hidden min-h-screen flex flex-col">
-        {/* <div className="bg-[#e7f0dc] shadow-[0px_4px_100px_0px_rgba(35,74,28,0.3)] px-4 py-4 sticky top-0 z-10"> */}
+        <div className="bg-[#e7f0dc] shadow-[0px_4px_100px_0px_rgba(35,74,28,0.3)] px-4 py-4 sticky top-0 z-10">
           <div className="flex items-center justify-between max-w-7xl mx-auto">
             <LogoWithText />
             <div className="flex gap-4">
@@ -575,7 +574,7 @@ export default function LandingPage({ onLogin }: LandingPageProps) {
               </button>
             </div>
           </div>
-        {/* </div> */}
+        </div>
 
         <div className="flex-1 flex flex-col items-center px-4 py-8 gap-8">
           <div className="text-center max-w-2xl">
