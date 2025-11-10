@@ -35,12 +35,6 @@ interface Property {
   amenities?: string[];
   type?: string;
   images?: string[];
-  // Add properties expected by PropertyForm
-  rating?: number;
-  ownerId?: string;
-  ownerName?: string;
-  ownerEmail?: string;
-  createdAt?: string;
 }
 
 interface Occupant {
@@ -79,7 +73,7 @@ const getField = <T,>(obj: any, field1: string, field2: string): T => {
 };
 
 // API Functions with proper typing
-const deleteProperty = async (id: string): Promise<void> => {
+const deleteProperty = async (id: string, accessToken: string): Promise<void> => {
   const supabase = createClient();
   const { error } = await supabase
     .from('properties')
@@ -89,7 +83,7 @@ const deleteProperty = async (id: string): Promise<void> => {
   if (error) throw error;
 };
 
-const deleteOccupant = async (id: string): Promise<void> => {
+const deleteOccupant = async (id: string, accessToken: string): Promise<void> => {
   const supabase = createClient();
   const { error } = await supabase
     .from('occupants')
@@ -100,7 +94,7 @@ const deleteOccupant = async (id: string): Promise<void> => {
 };
 
 type OccupantUpdate = Partial<Pick<Occupant, 'status' | 'monthly_rent' | 'paid_until' | 'room_number'>>;
-const updateOccupant = async (id: string, updates: Record<string, any>): Promise<void> => {
+const updateOccupant = async (id: string, updates: OccupantUpdate, accessToken: string): Promise<void> => {
   const supabase = createClient();
   const { error } = await supabase
     .from('occupants')
@@ -111,7 +105,7 @@ const updateOccupant = async (id: string, updates: Record<string, any>): Promise
 };
 
 type InquiryUpdate = Partial<Pick<Inquiry, 'status'>>;
-const updateInquiry = async (id: string, updates: Record<string, any>): Promise<void> => {
+const updateInquiry = async (id: string, updates: InquiryUpdate, accessToken: string): Promise<void> => {
   const supabase = createClient();
   const { error } = await supabase
     .from('inquiries')
