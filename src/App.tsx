@@ -4,7 +4,6 @@ import LoadingScreen from './components/LoadingScreen';
 import LandingPage from './components/LandingPage';
 import StudentDashboard from './components/StudentDashboard';
 import OwnerDashboard from './components/OwnerDashboard';
-import { initSampleData } from './utils/api';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<'landing' | 'dashboard'>('landing');
@@ -28,7 +27,7 @@ export default function App() {
     // Initialize - no sample data needed anymore
     async function initialize() {
       try {
-        await initSampleData();
+        // No initialization needed - data is now dynamic
         console.log('App initialized');
       } catch (err) {
         console.error('Error initializing:', err);

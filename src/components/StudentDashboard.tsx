@@ -7,6 +7,7 @@ import {
   Property,
   FilterOptions,
   getProperties,
+  getPublicProperties, // ADD THIS IMPORT
   filterProperties,
 } from "../utils/api";
 import { Menu, X } from "lucide-react";
@@ -560,7 +561,14 @@ export default function StudentDashboard({
     try {
       setLoading(true);
       setError(null);
-      const properties = await getProperties();
+      
+      // FIX: Use getPublicProperties instead of getProperties
+      // This ensures students see ALL properties, not filtered by owner
+      const properties = await getPublicProperties();
+      
+      console.log('Loaded properties for student:', properties.length, 'properties');
+      console.log('Sample property:', properties[0]);
+      
       setAllProperties(properties);
       setFilteredProperties(properties);
     } catch (err) {
@@ -673,9 +681,12 @@ export default function StudentDashboard({
         <div className="flex h-[calc(100vh-380px)] md:h-[calc(100vh-360px)] min-h-[500px] max-h-[1000px] rounded-[15px] shadow-[0px_0px_20px_0px_#597445] overflow-hidden">
           {loading ? (
             <div className="w-full h-full flex items-center justify-center">
+              <div className="flex flex-col items-center gap-4">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#597445]"></div>
               <p className="font-['Rethink_Sans:SemiBold',sans-serif] text-[20px] text-[#597445]">
                 Loading properties...
               </p>
+              </div>
             </div>
           ) : error ? (
             <div className="w-full h-full flex flex-col items-center justify-center gap-4">
@@ -701,6 +712,15 @@ export default function StudentDashboard({
             />
           )}
         </div>
+
+        {/* Debug info - you can remove this in production */}
+        {!loading && !error && (
+          <div className="mt-4 text-center">
+            <p className="font-['Rethink_Sans:Regular',sans-serif] text-[14px] text-[#597445]">
+              Showing {filteredProperties.length} of {allProperties.length} properties
+            </p>
+          </div>
+        )}
       </div>
 
       <FilterModal

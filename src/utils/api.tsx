@@ -1,4 +1,4 @@
-import { projectId, publicAnonKey } from './supabase/info';
+import { projectId } from './supabase/info';
 
 const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-47d35f34`;
 
@@ -94,12 +94,8 @@ export interface FilterOptions {
 // Properties API
 export async function getProperties(accessToken?: string): Promise<Property[]> {
   try {
-    const headers: Record<string, string> = {};
-    if (accessToken) {
-      headers['Authorization'] = `Bearer ${accessToken}`;
-    }
 
-    const response = await fetch(`${API_BASE}/properties`, { headers });
+    const response = await fetch(`${API_BASE}/properties`);
     const data = await response.json();
     
     if (!response.ok) {
@@ -109,6 +105,22 @@ export async function getProperties(accessToken?: string): Promise<Property[]> {
     return data.properties || [];
   } catch (error) {
     console.error('Error fetching properties:', error);
+    return [];
+  }
+}
+
+export async function getPublicProperties(): Promise<Property[]> {
+  try {
+    const response = await fetch(`${API_BASE}/properties`);
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to fetch properties');
+    }
+    
+    return data.properties || [];
+  } catch (error) {
+    console.error('Error fetching public properties:', error);
     return [];
   }
 }
@@ -134,22 +146,43 @@ export async function getOwnerProperties(ownerId: string, accessToken: string): 
 }
 
 export async function createProperty(propertyData: Partial<Property>, accessToken: string): Promise<Property> {
-  const response = await fetch(`${API_BASE}/properties`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${accessToken}`,
-    },
-    body: JSON.stringify(propertyData),
+  console.log('🔧 createProperty called with:', {
+    hasAccessToken: !!accessToken,
+    propertyData: propertyData
   });
-  
-  const data = await response.json();
-  
-  if (!response.ok) {
-    throw new Error(data.error || 'Failed to create property');
+
+  try {
+    const response = await fetch(`${API_BASE}/properties`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(propertyData),
+    });
+
+    console.log('🔧 Response status:', response.status);
+    
+    const responseText = await response.text();
+    console.log('🔧 Raw response:', responseText);
+
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error('❌ Failed to parse response as JSON:', parseError);
+      throw new Error(`Invalid response from server: ${responseText}`);
+    }
+    
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to create property');
+    }
+    
+    return data.property;
+  } catch (error) {
+    console.error('❌ createProperty error:', error);
+    throw error;
   }
-  
-  return data.property;
 }
 
 export async function updateProperty(id: string, updates: Partial<Property>, accessToken: string): Promise<Property> {
@@ -186,9 +219,9 @@ export async function deleteProperty(id: string, accessToken: string): Promise<v
 }
 
 // Occupants API
-export async function getOccupants(accessToken: string): Promise<Occupant[]> {
+export async function getOccupants(ownerId: string, accessToken: string): Promise<Occupant[]> {
   try {
-    const response = await fetch(`${API_BASE}/occupants`, {
+    const response = await fetch(`${API_BASE}/occupants/owner/${ownerId}`, {
       headers: {
         'Authorization': `Bearer ${accessToken}`,
       },
@@ -260,9 +293,9 @@ export async function deleteOccupant(id: string, accessToken: string): Promise<v
 }
 
 // Inquiries API
-export async function getInquiries(accessToken: string): Promise<Inquiry[]> {
+export async function getInquiries(ownerId: string, accessToken: string): Promise<Inquiry[]> {
   try {
-    const response = await fetch(`${API_BASE}/inquiries`, {
+    const response = await fetch(`${API_BASE}/inquiries/owner/${ownerId}`, {
       headers: {
         'Authorization': `Bearer ${accessToken}`,
       },
@@ -447,31 +480,18 @@ export async function signUp(email: string, password: string, name: string, user
   return data.user;
 }
 
-// Initialize sample data (no longer needed but kept for compatibility)
-export async function initSampleData(): Promise<void> {
-  // No-op - all data is now dynamic
-  return Promise.resolve();
-}
-
 // Filter properties
 export function filterProperties(properties: Property[], filters: FilterOptions): Property[] {
   return properties.filter((property) => {
-    // Price range filter
     if (property.price < filters.priceRange[0] || property.price > filters.priceRange[1]) {
       return false;
     }
-
-    // Property type filter
     if (filters.propertyTypes.length > 0 && !filters.propertyTypes.includes(property.type)) {
       return false;
     }
-
-    // Gender filter
     if (filters.gender.length > 0 && !filters.gender.includes(property.gender)) {
       return false;
     }
-
-    // Amenities filter
     if (filters.amenities.length > 0) {
       const hasAllAmenities = filters.amenities.every((amenity) =>
         property.amenities.includes(amenity)
@@ -480,17 +500,12 @@ export function filterProperties(properties: Property[], filters: FilterOptions)
         return false;
       }
     }
-
-    // Availability filter
     if (filters.availability.length > 0 && !filters.availability.includes(property.availability)) {
       return false;
     }
-
-    // Rating filter
     if (filters.rating > 0 && property.rating < filters.rating) {
       return false;
     }
-
     return true;
   });
 }
