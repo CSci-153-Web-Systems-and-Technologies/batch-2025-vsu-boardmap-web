@@ -409,56 +409,55 @@ function BodyRight({ onLogin }: BodyRightProps) {
       setLoading(true);
 
       if (isSignUp) {
-        const { data: signUpData, error: signUpError } =
-          await supabase.auth.signUp({
-            email: data.email,
-            password: data.password,
-            options: {
-              data: {
-                name: data.name || data.email.split("@")[0],
-                userType: data.userType,
-              },
-              emailRedirectTo: `${window.location.origin}/auth/callback`,
-            },
-          });
+        // Sign up with proper metadata
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          email: data.email,
+          password: data.password,
+          options: {
+            data: {
+              name: data.name || data.email.split("@")[0],
+              userType: data.userType,
+              type: data.userType // Add this for consistency
+            }
+          }
+        });
 
         if (signUpError) {
-          toast.error(signUpError.message || "Signup failed");
+          toast.error(signUpError.message || "Failed to create account");
           return;
         }
 
-        // Check if user already exists
-        if (signUpData.user?.identities?.length === 0) {
-          toast.error("User already exists");
+        if (signUpData.user) {
+          toast.success("Account created successfully! Please check your email for verification.");
+          // Don't auto-login after signup, wait for email verification
+          setIsSignUp(false);
+          return;
+        }
+      } else {
+        // Sign in
+        const { data: authData, error } = await supabase.auth.signInWithPassword({
+          email: data.email,
+          password: data.password,
+        });
+
+        if (error) {
+          toast.error(error.message || "Invalid email or password");
           return;
         }
 
-        toast.success("Account created successfully!");
-      }
-
-      // Sign in after signup
-      const { data: authData, error } = await supabase.auth.signInWithPassword({
-        email: data.email,
-        password: data.password,
-      });
-
-      if (error) {
-        toast.error(error.message || "Invalid email or password");
-        return;
-      }
-
-      if (authData.session && authData.user) {
-        const name =
-          authData.user.user_metadata?.name || data.email.split("@")[0];
-        const userType = authData.user.user_metadata?.userType || data.userType;
-        onLogin(
-          authData.user.id,
-          name,
-          authData.user.email || data.email,
-          userType,
-          authData.session.access_token
-        );
-        toast.success("Welcome to BoardMap!");
+        if (authData.session && authData.user) {
+          const name = authData.user.user_metadata?.name || data.email.split("@")[0];
+          const userType = authData.user.user_metadata?.userType || authData.user.user_metadata?.type || data.userType;
+          
+          onLogin(
+            authData.user.id,
+            name,
+            authData.user.email || data.email,
+            userType,
+            authData.session.access_token
+          );
+          toast.success("Welcome to BoardMap!");
+        }
       }
     } catch (error: any) {
       console.error("Authentication error:", error);
@@ -474,7 +473,11 @@ function BodyRight({ onLogin }: BodyRightProps) {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: window.location.origin,
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
         },
       });
 

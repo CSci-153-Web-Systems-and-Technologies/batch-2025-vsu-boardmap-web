@@ -3,14 +3,15 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { projectId, publicAnonKey } from './info';
 
 // Create a singleton instance
-let supabaseInstance: ReturnType<typeof createSupabaseClient> | null = null;
+let supabaseClient: ReturnType<typeof createSupabaseClient> | null = null;
 
 export function createClient() {
   // Return existing client if it already exists
-  if (supabaseInstance) {
-    return supabaseInstance;
+  if (supabaseClient) {
+    return supabaseClient;
   }
   
+  // Log for debugging
   console.log('Creating Supabase client for project:', projectId);
   
   const supabaseUrl = `https://${projectId}.supabase.co`;
@@ -27,7 +28,7 @@ export function createClient() {
   }
   
   // Create the singleton instance
-  supabaseInstance = createSupabaseClient(supabaseUrl, publicAnonKey, {
+  supabaseClient = createSupabaseClient(supabaseUrl, publicAnonKey, {
     auth: {
       persistSession: true,
       autoRefreshToken: true,
@@ -37,9 +38,11 @@ export function createClient() {
     },
     global: {
       fetch: (...args) => {
+        // Add timeout to fetch requests
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
+        // Ensure we pass at most two arguments to fetch: resource and init
         const [resource, init] = args as [RequestInfo, RequestInit?];
         const mergedInit = { ...(init || {}), signal: controller.signal };
 
@@ -49,8 +52,8 @@ export function createClient() {
     }
   });
   
-  return supabaseInstance;
+  return supabaseClient;
 }
 
-// Create and export the singleton instance
+// Export a default instance
 export const supabase = createClient();
