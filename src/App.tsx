@@ -5,22 +5,43 @@ import LandingPage from './components/LandingPage';
 import StudentDashboard from './components/StudentDashboard';
 import OwnerDashboard from './components/OwnerDashboard';
 import { initSampleData } from './utils/api';
+import './styles/global.css';
+
+export type User = {
+  id: string;
+  name: string;
+  email: string;
+  type: 'student' | 'owner';
+  accessToken: string;
+};
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<'landing' | 'dashboard'>('landing');
-  const [user, setUser] = useState<{ id: string; name: string; email: string; type: 'student' | 'owner'; accessToken: string } | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [initialized, setInitialized] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Load Leaflet library
+    // Check if Leaflet is already loaded
+    if (window.L) {
+      return;
+    }
+
+    // Load Leaflet script dynamically
     const script = document.createElement('script');
     script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
     script.async = true;
+    script.onload = () => {
+      console.log('Leaflet loaded successfully');
+    };
+    script.onerror = () => {
+      console.error('Failed to load Leaflet');
+    };
     document.head.appendChild(script);
 
     return () => {
-      document.head.removeChild(script);
+      // Don't remove script on cleanup to avoid reloading
+      // document.head.removeChild(script);
     };
   }, []);
 
