@@ -110,13 +110,17 @@ interface AuthFormProps {
 function AuthForm({ isSignUp, onSubmit, loading }: AuthFormProps) {
   const [formData, setFormData] = useState({
     name: "",
-    email: "",
+    email: localStorage.getItem("lastLoggedEmail") || "",
     password: "",
     userType: "student" as "student" | "owner",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if(formData.email && !isSignUp)
+    {
+      localStorage.setItem("lastLoggedEmail", formData.email);
+    }
     await onSubmit(formData);
   };
 
@@ -246,30 +250,35 @@ function LogInOrSignUp({
   onToggle: () => void;
 }) {
   return (
-    <div className="grid-cols-[max-content] grid-rows-[max-content] inline-grid leading-[0] place-items-start relative shrink-0">
-      <motion.div
-        animate={{ x: isSignUp ? 145 : 0 }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="[grid-area:1_/_1] bg-[#4f6f52] h-[35px] ml-0 mt-0 rounded-[15px] shadow-[0px_0px_50px_0px_#597445] w-[150px]"
-      />
-      <div className="[grid-area:1_/_1] box-border content-stretch flex font-['Rethink_Sans:Medium',sans-serif] font-medium gap-[50px] items-center justify-center ml-[18px] mt-[6px] relative text-[18px] text-center">
+    <div className="relative flex flex-col items-center">
+      {/* Background sliding green box */}
+      <div className="relative h-[35px] w-[300px] rounded-[15px] bg-gray-100 overflow-hidden">
+        <motion.div
+          animate={{ x: isSignUp ? 150 : 0 }}
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          className="absolute top-0 h-[35px] w-[150px] rounded-[15px] bg-[#4f6f52] shadow-[0px_0px_50px_0px_#597445]"
+        />
+      </div>
+      
+      {/* Text buttons positioned over the background */}
+      <div className="absolute top-0 flex h-[35px] w-[300px]">
         <button
           type="button"
           onClick={() => onToggle()}
-          className={`flex flex-col h-[23px] justify-center relative shrink-0 w-[113px] cursor-pointer transition-colors ${
+          className={`flex-1 flex items-center justify-center font-['Rethink_Sans:Medium',sans-serif] font-medium text-[18px] transition-colors rounded-l-[15px] ${
             !isSignUp ? "text-[#e8f3da]" : "text-[#4f6f52]"
           }`}
         >
-          <p className="leading-[normal]">Log In</p>
+          Log In
         </button>
         <button
           type="button"
           onClick={() => onToggle()}
-          className={`flex flex-col h-[23px] justify-center relative shrink-0 w-[113px] cursor-pointer transition-colors ${
+          className={`flex-1 flex items-center justify-center font-['Rethink_Sans:Medium',sans-serif] font-medium text-[18px] transition-colors rounded-r-[15px] ${
             isSignUp ? "text-[#e8f3da]" : "text-[#4f6f52]"
           }`}
         >
-          <p className="leading-[normal]">Sign Up</p>
+          Sign Up
         </button>
       </div>
     </div>
