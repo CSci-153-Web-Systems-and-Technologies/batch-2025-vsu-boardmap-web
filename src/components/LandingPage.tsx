@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import svgPaths from "../imports/svg-0x5486gjrj";
@@ -113,10 +113,30 @@ function AuthForm({ isSignUp, onSubmit, loading }: AuthFormProps) {
     password: "",
     userType: "student" as "student" | "owner",
   });
+  
+  const [showPassword, setShowPassword] = useState(false);
+  const [savedEmail, setSavedEmail] = useState(
+    localStorage.getItem("lastLoggedInEmail") || ""
+  );
+
+  // Load saved email on mount
+  useEffect(() => {
+    if (savedEmail) {
+      setFormData(prev => ({ ...prev, email: savedEmail }));
+    }
+  }, [savedEmail]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Save email to localStorage
+    if (formData.email && !isSignUp) {
+      localStorage.setItem("lastLoggedInEmail", formData.email);
+    }
     await onSubmit(formData);
+  };
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
   };
 
   return (
@@ -173,18 +193,65 @@ function AuthForm({ isSignUp, onSubmit, loading }: AuthFormProps) {
         <div className="flex flex-col font-['Rethink_Sans:Medium',sans-serif] font-medium h-[22px] justify-center leading-[0] relative shrink-0 text-[#4f6f52] text-[14px] w-full">
           <p className="leading-[normal]">Password</p>
         </div>
-        <input
-          type="password"
-          value={formData.password}
-          onChange={(e) =>
-            setFormData({ ...formData, password: e.target.value })
-          }
-          placeholder={isSignUp ? "create secure password" : "enter password"}
-          className="bg-[#e7f0dc] h-[35px] w-full rounded-[15px] border border-[#597445] px-[23px] py-[6px] font-['Rethink_Sans:Regular',sans-serif] text-[12px] text-[#4f6f52] outline-none focus:ring-2 focus:ring-[#597445] transition-all"
-          required
-        />
+        <div className="relative w-full">
+          <input
+            type={showPassword ? "text" : "password"}
+            value={formData.password}
+            onChange={(e) =>
+              setFormData({ ...formData, password: e.target.value })
+            }
+            placeholder={isSignUp ? "create secure password" : "enter password"}
+            className="bg-[#e7f0dc] h-[35px] w-full rounded-[15px] border border-[#597445] px-[23px] py-[6px] font-['Rethink_Sans:Regular',sans-serif] text-[12px] text-[#4f6f52] outline-none focus:ring-2 focus:ring-[#597445] transition-all pr-10"
+            required
+          />
+          <button
+            type="button"
+            onClick={togglePasswordVisibility}
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#4f6f52] hover:text-[#3d5841] transition-colors focus:outline-none"
+            aria-label={showPassword ? "Hide password" : "Show password"}
+          >
+            {showPassword ? (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L6.59 6.59m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
+                />
+              </svg>
+            ) : (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                />
+              </svg>
+            )}
+          </button>
+        </div>
       </div>
 
+      {/* User Type Selection - Keep as is */}
       <div className="content-stretch flex gap-[28px] items-center relative shrink-0">
         <div className="relative">
           <motion.div
@@ -222,6 +289,7 @@ function AuthForm({ isSignUp, onSubmit, loading }: AuthFormProps) {
         </div>
       </div>
 
+      {/* Submit Button - Keep as is */}
       <button
         type="submit"
         disabled={loading}
@@ -245,30 +313,35 @@ function LogInOrSignUp({
   onToggle: () => void;
 }) {
   return (
-    <div className="grid-cols-[max-content] grid-rows-[max-content] inline-grid leading-[0] place-items-start relative shrink-0">
-      <motion.div
-        animate={{ x: isSignUp ? 145 : 0 }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="[grid-area:1_/_1] bg-[#4f6f52] h-[35px] ml-0 mt-0 rounded-[15px] shadow-[0px_0px_50px_0px_#597445] w-[150px]"
-      />
-      <div className="[grid-area:1_/_1] box-border content-stretch flex font-['Rethink_Sans:Medium',sans-serif] font-medium gap-[50px] items-center justify-center ml-[18px] mt-[6px] relative text-[18px] text-center">
+    <div className="relative flex flex-col items-center">
+      {/* Background sliding green box */}
+      <div className="relative h-[35px] w-[300px] rounded-[15px] bg-gray-100 overflow-hidden">
+        <motion.div
+          animate={{ x: isSignUp ? 150 : 0 }}
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          className="absolute top-0 h-[35px] w-[150px] rounded-[15px] bg-[#4f6f52] shadow-[0px_0px_50px_0px_#597445]"
+        />
+      </div>
+      
+      {/* Text buttons positioned over the background */}
+      <div className="absolute top-0 flex h-[35px] w-[300px]">
         <button
           type="button"
           onClick={() => onToggle()}
-          className={`flex flex-col h-[23px] justify-center relative shrink-0 w-[113px] cursor-pointer transition-colors ${
+          className={`flex-1 flex items-center justify-center font-['Rethink_Sans:Medium',sans-serif] font-medium text-[18px] transition-colors rounded-l-[15px] ${
             !isSignUp ? "text-[#e8f3da]" : "text-[#4f6f52]"
           }`}
         >
-          <p className="leading-[normal]">Log In</p>
+          Log In
         </button>
         <button
           type="button"
           onClick={() => onToggle()}
-          className={`flex flex-col h-[23px] justify-center relative shrink-0 w-[113px] cursor-pointer transition-colors ${
+          className={`flex-1 flex items-center justify-center font-['Rethink_Sans:Medium',sans-serif] font-medium text-[18px] transition-colors rounded-r-[15px] ${
             isSignUp ? "text-[#e8f3da]" : "text-[#4f6f52]"
           }`}
         >
-          <p className="leading-[normal]">Sign Up</p>
+          Sign Up
         </button>
       </div>
     </div>
