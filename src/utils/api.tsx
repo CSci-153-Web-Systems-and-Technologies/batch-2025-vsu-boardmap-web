@@ -1,4 +1,5 @@
-import { projectId } from './supabase/info';
+import { projectId, publicAnonKey } from './supabase/info';
+import { supabase } from './supabase/client';
 
 const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-47d35f34`;
 
@@ -10,7 +11,7 @@ export interface Room {
 }
 
 export interface Property {
-  id: string;
+id: string;
   title: string;
   description: string;
   price: number;
@@ -25,13 +26,13 @@ export interface Property {
   images: string[];
   bedrooms: number;
   bathrooms: number;
-  ownerId: string;
-  ownerName: string;
-  ownerEmail: string;
-  ownerPhone?: string;
+  owner_id: string; 
+  owner_name: string; 
+  owner_email: string; 
+  owner_phone?: string; 
   rooms?: Room[];
-  createdAt: string;
-  updatedAt?: string;
+  created_at: string; 
+  updated_at?: string;
 }
 
 export interface Occupant {
@@ -92,131 +93,113 @@ export interface FilterOptions {
 }
 
 // Properties API
-export async function getProperties(accessToken?: string): Promise<Property[]> {
+export async function getProperties(): Promise<Property[]> {
   try {
-
-    const response = await fetch(`${API_BASE}/properties`);
-    const data = await response.json();
+    const { data, error } = await supabase
+      .from('properties')
+      .select('*')
+      .order('created_at', { ascending: false });
     
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to fetch properties');
-    }
-    
-    return data.properties || [];
+    if (error) throw error;
+    return data || [];
   } catch (error) {
     console.error('Error fetching properties:', error);
     return [];
   }
 }
 
-export async function getPublicProperties(): Promise<Property[]> {
+export async function getOwnerProperties(ownerId: string): Promise<Property[]> {
   try {
-    const response = await fetch(`${API_BASE}/properties`);
-    const data = await response.json();
+    const { data, error } = await supabase
+      .from('properties')
+      .select('*')
+      .eq('owner_id', ownerId)
+      .order('created_at', { ascending: false });
     
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to fetch properties');
-    }
-    
-    return data.properties || [];
-  } catch (error) {
-    console.error('Error fetching public properties:', error);
-    return [];
-  }
-}
-
-export async function getOwnerProperties(ownerId: string, accessToken: string): Promise<Property[]> {
-  try {
-    const response = await fetch(`${API_BASE}/properties/owner/${ownerId}`, {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-      },
-    });
-    const data = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to fetch owner properties');
-    }
-    
-    return data.properties || [];
+    if (error) throw error;
+    return data || [];
   } catch (error) {
     console.error('Error fetching owner properties:', error);
     return [];
   }
 }
 
-export async function createProperty(propertyData: Partial<Property>, accessToken: string): Promise<Property> {
-  console.log('🔧 createProperty called with:', {
-    hasAccessToken: !!accessToken,
-    propertyData: propertyData
-  });
-
+export async function createProperty(propertyData: Partial<Property>): Promise<Property> {
   try {
-    const response = await fetch(`${API_BASE}/properties`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify(propertyData),
-    });
-
-    console.log('🔧 Response status:', response.status);
+    console.log("Creating property with data:", propertyData);
     
-    const responseText = await response.text();
-    console.log('🔧 Raw response:', responseText);
+    // Ensure required fields are present
+    const payload = {
+      title: propertyData.title,
+      description: propertyData.description || '',
+      price: Number(propertyData.price) || 0,
+      address: propertyData.address || '',
+      location: propertyData.location || { lat: 10.6777, lng: 124.8009 },
+      type: propertyData.type || 'Studio',
+      gender: propertyData.gender || 'Any',
+      bedrooms: Number(propertyData.bedrooms) || 1,
+      bathrooms: Number(propertyData.bathrooms) || 1,
+      amenities: propertyData.amenities || [],
+      images: propertyData.images || [],
+      availability: propertyData.availability || 'Available',
+      owner_phone: propertyData.owner_phone || '',
+      owner_id: propertyData.owner_id,
+      owner_name: propertyData.owner_name,
+      owner_email: propertyData.owner_email,
+    };
 
-    let data;
-    try {
-      data = JSON.parse(responseText);
-    } catch (parseError) {
-      console.error('❌ Failed to parse response as JSON:', parseError);
-      throw new Error(`Invalid response from server: ${responseText}`);
+    console.log("Sending to Supabase:", payload);
+
+    const { data, error } = await supabase
+      .from('properties')
+      .insert([payload])
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Supabase error:", error);
+      throw new Error(error.message || 'Failed to create property');
     }
-    
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to create property');
-    }
-    
-    return data.property;
-  } catch (error) {
-    console.error('❌ createProperty error:', error);
-    throw error;
+
+    console.log("Property created successfully:", data);
+    return data;
+  } catch (error: any) {
+    console.error('Error creating property:', error);
+    throw new Error(error.message || 'Failed to create property');
   }
 }
 
-export async function updateProperty(id: string, updates: Partial<Property>, accessToken: string): Promise<Property> {
-  const response = await fetch(`${API_BASE}/properties/${id}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${accessToken}`,
-    },
-    body: JSON.stringify(updates),
-  });
-  
-  const data = await response.json();
-  
-  if (!response.ok) {
-    throw new Error(data.error || 'Failed to update property');
+export async function updateProperty(id: string, updates: Partial<Property>): Promise<Property> {
+  try {
+    const { data, error } = await supabase
+      .from('properties')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  } catch (error: any) {
+    console.error('Error updating property:', error);
+    throw new Error(error.message || 'Failed to update property');
   }
-  
-  return data.property;
 }
 
-export async function deleteProperty(id: string, accessToken: string): Promise<void> {
-  const response = await fetch(`${API_BASE}/properties/${id}`, {
-    method: 'DELETE',
-    headers: {
-      'Authorization': `Bearer ${accessToken}`,
-    },
-  });
-  
-  if (!response.ok) {
-    const data = await response.json();
-    throw new Error(data.error || 'Failed to delete property');
+export async function deleteProperty(id: string): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from('properties')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+  } catch (error: any) {
+    console.error('Error deleting property:', error);
+    throw new Error(error.message || 'Failed to delete property');
   }
 }
+
 
 // Occupants API
 export async function getOccupants(ownerId: string, accessToken: string): Promise<Occupant[]> {
