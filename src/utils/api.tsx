@@ -1,8 +1,5 @@
-import {
-  createClient as createSupabaseClient,
-  SupabaseClient,
-} from "@supabase/supabase-js";
-import { projectId, publicAnonKey } from "./supabase/info";
+import { projectId, publicAnonKey } from './supabase/info';
+import { supabase } from './supabase/client';
 
 const supabaseUrl = `https://${projectId}.supabase.co`;
 const supabaseAnonKey = publicAnonKey;
@@ -108,191 +105,108 @@ export interface FilterOptions {
 // Properties API
 export async function getProperties(): Promise<Property[]> {
   try {
-    const supabase = createClient();
-
-    const { data: properties, error } = await supabase
-      .from("properties")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      throw new Error(error.message || "Failed to fetch properties");
-    }
-
-    // Transform the data to match your Property interface
-    return (properties || []).map((property) => ({
-      id: property.id,
-      title: property.title,
-      description: property.description || "",
-      price: property.price,
-      address: property.address,
-      location: property.location || { lat: 10.6777, lng: 124.8009 }, // Default to VSU location
-      amenities: property.amenities || [],
-      type: property.type || "Private Room",
-      availability: property.availability || "Available",
-      gender: property.gender || "Any",
-      rating: property.rating || 0,
-      reviews: property.reviews || 0,
-      images: property.images || [],
-      bedrooms: property.bedrooms || 1,
-      bathrooms: property.bathrooms || 1,
-      ownerId: property.owner_id,
-      ownerName: property.owner_name || "Property Owner",
-      ownerEmail: property.owner_email || "",
-      createdAt: property.created_at,
-      updatedAt: property.updated_at,
-    }));
+    const { data, error } = await supabase
+      .from('properties')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    return data || [];
   } catch (error) {
     console.error("Error fetching properties:", error);
     return [];
   }
 }
 
-export async function getOwnerProperties(
-  ownerId: string,
-  accessToken: string
-): Promise<Property[]> {
+export async function getOwnerProperties(ownerId: string): Promise<Property[]> {
   try {
-    const supabase = createClient();
-
-    const { data: properties, error } = await supabase
-      .from("properties")
-      .select("*")
-      .eq("owner_id", ownerId)
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      throw new Error(error.message || "Failed to fetch owner properties");
-    }
-
-    return (properties || []).map((property) => ({
-      id: property.id,
-      title: property.title,
-      description: property.description || "",
-      price: property.price,
-      address: property.address,
-      location: property.location || { lat: 10.6777, lng: 124.8009 },
-      amenities: property.amenities || [],
-      type: property.type || "Private Room",
-      availability: property.availability || "Available",
-      gender: property.gender || "Any",
-      rating: property.rating || 0,
-      reviews: property.reviews || 0,
-      images: property.images || [],
-      bedrooms: property.bedrooms || 1,
-      bathrooms: property.bathrooms || 1,
-      ownerId: property.owner_id,
-      ownerName: property.owner_name || "Property Owner",
-      ownerEmail: property.owner_email || "",
-      createdAt: property.created_at,
-      updatedAt: property.updated_at,
-    }));
+    const { data, error } = await supabase
+      .from('properties')
+      .select('*')
+      .eq('owner_id', ownerId)
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    return data || [];
   } catch (error) {
     console.error("Error fetching owner properties:", error);
     return [];
   }
 }
 
-export async function createProperty(
-  propertyData: Partial<Property>,
-  accessToken: string
-): Promise<Property> {
+export async function createProperty(propertyData: Partial<Property>): Promise<Property> {
   try {
-    const supabase = createClient();
+    console.log("Creating property with data:", propertyData);
+    
+    // Ensure required fields are present
+    const payload = {
+      title: propertyData.title,
+      description: propertyData.description || '',
+      price: Number(propertyData.price) || 0,
+      address: propertyData.address || '',
+      location: propertyData.location || { lat: 10.6777, lng: 124.8009 },
+      type: propertyData.type || 'Studio',
+      gender: propertyData.gender || 'Any',
+      bedrooms: Number(propertyData.bedrooms) || 1,
+      bathrooms: Number(propertyData.bathrooms) || 1,
+      amenities: propertyData.amenities || [],
+      images: propertyData.images || [],
+      availability: propertyData.availability || 'Available',
+      owner_phone: propertyData.owner_phone || '',
+      owner_id: propertyData.owner_id,
+      owner_name: propertyData.owner_name,
+      owner_email: propertyData.owner_email,
+    };
+
+    console.log("Sending to Supabase:", payload);
 
     const { data, error } = await supabase
-      .from("properties")
-      .insert([
-        {
-          title: propertyData.title,
-          description: propertyData.description,
-          price: propertyData.price,
-          address: propertyData.address,
-          location: propertyData.location,
-          amenities: propertyData.amenities,
-          type: propertyData.type,
-          availability: propertyData.availability,
-          gender: propertyData.gender,
-          bedrooms: propertyData.bedrooms,
-          bathrooms: propertyData.bathrooms,
-          owner_id: propertyData.ownerId,
-          owner_name: propertyData.ownerName,
-          owner_email: propertyData.ownerEmail,
-          images: propertyData.images,
-        },
-      ])
+      .from('properties')
+      .insert([payload])
       .select()
       .single();
 
     if (error) {
-      throw new Error(error.message || "Failed to create property");
+      console.error("Supabase error:", error);
+      throw new Error(error.message || 'Failed to create property');
     }
 
-    return {
-      id: data.id,
-      title: data.title,
-      description: data.description || "",
-      price: data.price,
-      address: data.address,
-      location: data.location || { lat: 10.6777, lng: 124.8009 },
-      amenities: data.amenities || [],
-      type: data.type || "Private Room",
-      availability: data.availability || "Available",
-      gender: data.gender || "Any",
-      rating: data.rating || 0,
-      reviews: data.reviews || 0,
-      images: data.images || [],
-      bedrooms: data.bedrooms || 1,
-      bathrooms: data.bathrooms || 1,
-      ownerId: data.owner_id,
-      ownerName: data.owner_name || "Property Owner",
-      ownerEmail: data.owner_email || "",
-      createdAt: data.created_at,
-      updatedAt: data.updated_at,
-    };
-  } catch (error) {
-    console.error("Error creating property:", error);
-    throw error;
+    console.log("Property created successfully:", data);
+    return data;
+  } catch (error: any) {
+    console.error('Error creating property:', error);
+    throw new Error(error.message || 'Failed to create property');
   }
 }
 
-export async function updateProperty(
-  id: string,
-  updates: Partial<Property>,
-  accessToken: string
-): Promise<Property> {
-  const response = await fetch(`${API_BASE}/properties/${id}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${accessToken}`,
-    },
-    body: JSON.stringify(updates),
-  });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.error || "Failed to update property");
+export async function updateProperty(id: string, updates: Partial<Property>): Promise<Property> {
+  try {
+    const { data, error } = await supabase
+      .from('properties')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  } catch (error: any) {
+    console.error('Error updating property:', error);
+    throw new Error(error.message || 'Failed to update property');
   }
-
-  return data.property;
 }
 
-export async function deleteProperty(
-  id: string,
-  accessToken: string
-): Promise<void> {
-  const response = await fetch(`${API_BASE}/properties/${id}`, {
-    method: "DELETE",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
-
-  if (!response.ok) {
-    const data = await response.json();
-    throw new Error(data.error || "Failed to delete property");
+export async function deleteProperty(id: string): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from('properties')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+  } catch (error: any) {
+    console.error('Error deleting property:', error);
+    throw new Error(error.message || 'Failed to delete property');
   }
 }
 
@@ -607,27 +521,13 @@ export function filterProperties(
   filters: FilterOptions
 ): Property[] {
   return properties.filter((property) => {
-    // Price range filter
-    if (
-      property.price < filters.priceRange[0] ||
-      property.price > filters.priceRange[1]
-    ) {
+    if (property.price < filters.priceRange[0] || property.price > filters.priceRange[1]) {
       return false;
     }
-
-    // Property type filter
-    if (
-      filters.propertyTypes.length > 0 &&
-      !filters.propertyTypes.includes(property.type)
-    ) {
+    if (filters.propertyTypes.length > 0 && !filters.propertyTypes.includes(property.type)) {
       return false;
     }
-
-    // Gender filter
-    if (
-      filters.gender.length > 0 &&
-      !filters.gender.includes(property.gender)
-    ) {
+    if (filters.gender.length > 0 && !filters.gender.includes(property.gender)) {
       return false;
     }
     if (filters.amenities.length > 0) {
@@ -638,12 +538,7 @@ export function filterProperties(
         return false;
       }
     }
-
-    // Availability filter
-    if (
-      filters.availability.length > 0 &&
-      !filters.availability.includes(property.availability)
-    ) {
+    if (filters.availability.length > 0 && !filters.availability.includes(property.availability)) {
       return false;
     }
     if (filters.rating > 0 && property.rating < filters.rating) {

@@ -48,26 +48,7 @@ export default function App() {
     // Initialize and check for existing session
     async function initialize() {
       try {
-        const supabase = createClient();
-        
-        // Check for existing session
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (session?.user) {
-          // User is already logged in, restore their session
-          const userData = {
-            id: session.user.id,
-            name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
-            email: session.user.email!,
-            type: session.user.user_metadata?.type as 'student' | 'owner' || 'student', // Default to student if not specified
-            accessToken: session.access_token
-          };
-          
-          setUser(userData);
-          setCurrentPage('dashboard');
-          console.log('Restored existing session for:', userData.email);
-        }
-        
+        await initSampleData();
         console.log('App initialized');
       } catch (err) {
         console.error('Error initializing:', err);

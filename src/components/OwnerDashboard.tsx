@@ -16,8 +16,26 @@ import {
   AlertDialogTitle,
 } from "./ui/alert-dialog";
 
-import type { Property } from "../utils/api";
 // TypeScript Interfaces - Match your actual database schema
+interface Property {
+  id: string;
+  title: string;
+  address: string;
+  price: number;
+  availability: string;
+  bedrooms: number;
+  bathrooms: number;
+  gender: string;
+  reviews?: number;
+  owner_id: string;
+  created_at: string;
+  // Add any missing properties that PropertyForm expects
+  description: string;
+  location?: string;
+  amenities?: string[];
+  type?: string;
+  images?: string[];
+}
 
 interface Occupant {
   id: string;
@@ -76,7 +94,7 @@ const deleteOccupant = async (id: string, accessToken: string): Promise<void> =>
 };
 
 type OccupantUpdate = Partial<Pick<Occupant, 'status' | 'monthly_rent' | 'paid_until' | 'room_number'>>;
-const updateOccupant = async (id: string, updates: OccupantUpdate, accessToken: string): Promise<void> => {
+const updateOccupant = async (id: string, updates: OccupantUpdate): Promise<void> => {
   const supabase = createClient();
   const { error } = await supabase
     .from('occupants')
@@ -87,7 +105,7 @@ const updateOccupant = async (id: string, updates: OccupantUpdate, accessToken: 
 };
 
 type InquiryUpdate = Partial<Pick<Inquiry, 'status'>>;
-const updateInquiry = async (id: string, updates: InquiryUpdate, accessToken: string): Promise<void> => {
+const updateInquiry = async (id: string, updates: InquiryUpdate): Promise<void> => {
   const supabase = createClient();
   const { error } = await supabase
     .from('inquiries')
@@ -447,6 +465,12 @@ export default function OwnerDashboard({
         .eq('owner_id', user.id)
         .order('created_at', { ascending: false });
 
+      // Ensure description is always a string, not undefined
+      const propertiesWithDefaults = ((properties as any[]) || []).map((p: any) => ({
+        ...p,
+        description: p.description || ''
+      }));
+
       // Fetch occupants
       const { data: occupants, error: occupantsError } = await supabase
         .from('occupants')
@@ -459,7 +483,7 @@ export default function OwnerDashboard({
         .from('inquiries')
         .select('*')
         .eq('owner_id', user.id)
-        .order('created_at', { ascending: false });
+      setProperties(propertiesWithDefaults);
 
       if (propertiesError) console.error('Properties error:', propertiesError);
       if (occupantsError) console.error('Occupants error:', occupantsError);
@@ -507,10 +531,10 @@ export default function OwnerDashboard({
 
     try {
       if (itemToDelete.type === "property") {
-        await deleteProperty(itemToDelete.id, user.accessToken);
+        await deleteProperty(itemToDelete.id);
         toast.success("Property deleted successfully");
       } else if (itemToDelete.type === "occupant") {
-        await deleteOccupant(itemToDelete.id, user.accessToken);
+        await deleteOccupant(itemToDelete.id);
         toast.success("Occupant removed successfully");
       }
       await fetchData();
@@ -533,8 +557,7 @@ export default function OwnerDashboard({
       const newStatus = occupant.status === "active" ? "inactive" : "active";
       await updateOccupant(
         occupant.id,
-        { status: newStatus },
-        user.accessToken
+        { status: newStatus }
       );
       toast.success(`Occupant status changed to ${newStatus}`);
       await fetchData();
@@ -546,8 +569,7 @@ export default function OwnerDashboard({
 
   const handleArchiveInquiry = async (id: string) => {
     try {
-      await updateInquiry(id, { status: "archived" }, user.accessToken);
-      toast.success("Inquiry archived");
+      await updateInquiry(id, { status: "archived" });
       await fetchData();
     } catch (error) {
       console.error("Error archiving inquiry:", error);
@@ -1150,6 +1172,11 @@ export default function OwnerDashboard({
         onSave={handlePropertyFormSave}
         accessToken={user.accessToken}
         property={editingProperty}
+        currentUser={{
+          id: user.id,
+          name: user.name,
+          email: user.email,
+        }}
       />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
