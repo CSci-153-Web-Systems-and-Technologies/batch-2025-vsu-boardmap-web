@@ -113,7 +113,7 @@ function AuthForm({ isSignUp, onSubmit, loading }: AuthFormProps) {
     password: "",
     userType: "student" as "student" | "owner",
   });
-  
+
   const [showPassword, setShowPassword] = useState(false);
   const [savedEmail, setSavedEmail] = useState(
     localStorage.getItem("lastLoggedInEmail") || ""
@@ -122,7 +122,7 @@ function AuthForm({ isSignUp, onSubmit, loading }: AuthFormProps) {
   // Load saved email on mount
   useEffect(() => {
     if (savedEmail) {
-      setFormData(prev => ({ ...prev, email: savedEmail }));
+      setFormData((prev) => ({ ...prev, email: savedEmail }));
     }
   }, [savedEmail]);
 
@@ -322,7 +322,7 @@ function LogInOrSignUp({
           className="absolute top-0 h-[35px] w-[150px] rounded-[15px] bg-[#4f6f52] shadow-[0px_0px_50px_0px_#597445]"
         />
       </div>
-      
+
       {/* Text buttons positioned over the background */}
       <div className="absolute top-0 flex h-[35px] w-[300px]">
         <button
@@ -409,17 +409,34 @@ function BodyRight({ onLogin }: BodyRightProps) {
       setLoading(true);
 
       if (isSignUp) {
-        // Sign up
-        await signUp(
-          data.email,
-          data.password,
-          data.name || data.email.split("@")[0],
-          data.userType
-        );
+        const { data: signUpData, error: signUpError } =
+          await supabase.auth.signUp({
+            email: data.email,
+            password: data.password,
+            options: {
+              data: {
+                name: data.name || data.email.split("@")[0],
+                userType: data.userType,
+              },
+              emailRedirectTo: `${window.location.origin}/auth/callback`,
+            },
+          });
+
+        if (signUpError) {
+          toast.error(signUpError.message || "Signup failed");
+          return;
+        }
+
+        // Check if user already exists
+        if (signUpData.user?.identities?.length === 0) {
+          toast.error("User already exists");
+          return;
+        }
+
         toast.success("Account created successfully!");
       }
 
-      // Sign in
+      // Sign in after signup
       const { data: authData, error } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
@@ -629,25 +646,25 @@ export default function LandingPage({ onLogin }: LandingPageProps) {
 
       {/* Mobile/Tablet Version */}
       <div className="lg:hidden min-h-screen flex flex-col">
-        <div className="bg-[#e7f0dc] shadow-[0px_4px_100px_0px_rgba(35,74,28,0.3)] px-4 py-4 sticky top-0 z-10">
-          <div className="flex items-center justify-between max-w-7xl mx-auto">
-            <LogoWithText />
-            <div className="flex gap-4">
-              <button
-                onClick={() => setShowAbout(true)}
-                className="font-['Rethink_Sans:SemiBold',sans-serif] text-[#4f6f52] text-[16px] hover:opacity-70 transition-opacity"
-              >
-                About
-              </button>
-              <button
-                onClick={() => setShowContact(true)}
-                className="font-['Rethink_Sans:SemiBold',sans-serif] text-[#4f6f52] text-[16px] hover:opacity-70 transition-opacity"
-              >
-                Contact
-              </button>
-            </div>
+        {/* <div className="bg-[#e7f0dc] shadow-[0px_4px_100px_0px_rgba(35,74,28,0.3)] px-4 py-4 sticky top-0 z-10"> */}
+        <div className="flex items-center justify-between max-w-7xl mx-auto">
+          <LogoWithText />
+          <div className="flex gap-4">
+            <button
+              onClick={() => setShowAbout(true)}
+              className="font-['Rethink_Sans:SemiBold',sans-serif] text-[#4f6f52] text-[16px] hover:opacity-70 transition-opacity"
+            >
+              About
+            </button>
+            <button
+              onClick={() => setShowContact(true)}
+              className="font-['Rethink_Sans:SemiBold',sans-serif] text-[#4f6f52] text-[16px] hover:opacity-70 transition-opacity"
+            >
+              Contact
+            </button>
           </div>
         </div>
+        {/* </div> */}
 
         <div className="flex-1 flex flex-col items-center px-4 py-8 gap-8">
           <div className="text-center max-w-2xl">
