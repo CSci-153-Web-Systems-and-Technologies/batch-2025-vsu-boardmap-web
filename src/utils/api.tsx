@@ -1,4 +1,5 @@
-import { projectId } from './supabase/info';
+import { projectId, publicAnonKey } from './supabase/info';
+import { supabase } from './supabase/client';
 
 const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-47d35f34`;
 
@@ -94,9 +95,10 @@ export interface FilterOptions {
 // Properties API
 export async function getProperties(): Promise<Property[]> {
   try {
-
-    const response = await fetch(`${API_BASE}/properties`);
-    const data = await response.json();
+    const { data, error } = await supabase
+      .from('properties')
+      .select('*')
+      .order('created_at', { ascending: false });
     
     if (error) throw error;
     return data || [];
@@ -106,23 +108,7 @@ export async function getProperties(): Promise<Property[]> {
   }
 }
 
-export async function getPublicProperties(): Promise<Property[]> {
-  try {
-    const response = await fetch(`${API_BASE}/properties`);
-    const data = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to fetch properties');
-    }
-    
-    return data.properties || [];
-  } catch (error) {
-    console.error('Error fetching public properties:', error);
-    return [];
-  }
-}
-
-export async function getOwnerProperties(ownerId: string, accessToken: string): Promise<Property[]> {
+export async function getOwnerProperties(ownerId: string): Promise<Property[]> {
   try {
     const { data, error } = await supabase
       .from('properties')
@@ -138,43 +124,48 @@ export async function getOwnerProperties(ownerId: string, accessToken: string): 
   }
 }
 
-export async function createProperty(propertyData: Partial<Property>, accessToken: string): Promise<Property> {
-  console.log('🔧 createProperty called with:', {
-    hasAccessToken: !!accessToken,
-    propertyData: propertyData
-  });
-
+export async function createProperty(propertyData: Partial<Property>): Promise<Property> {
   try {
-    const response = await fetch(`${API_BASE}/properties`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify(propertyData),
-    });
+    console.log("Creating property with data:", propertyData);
+    
+    // Ensure required fields are present
+    const payload = {
+      title: propertyData.title,
+      description: propertyData.description || '',
+      price: Number(propertyData.price) || 0,
+      address: propertyData.address || '',
+      location: propertyData.location || { lat: 10.6777, lng: 124.8009 },
+      type: propertyData.type || 'Studio',
+      gender: propertyData.gender || 'Any',
+      bedrooms: Number(propertyData.bedrooms) || 1,
+      bathrooms: Number(propertyData.bathrooms) || 1,
+      amenities: propertyData.amenities || [],
+      images: propertyData.images || [],
+      availability: propertyData.availability || 'Available',
+      owner_phone: propertyData.owner_phone || '',
+      owner_id: propertyData.owner_id,
+      owner_name: propertyData.owner_name,
+      owner_email: propertyData.owner_email,
+    };
 
-    console.log('🔧 Response status:', response.status);
-    
-    const responseText = await response.text();
-    console.log('🔧 Raw response:', responseText);
+    console.log("Sending to Supabase:", payload);
 
-    let data;
-    try {
-      data = JSON.parse(responseText);
-    } catch (parseError) {
-      console.error('❌ Failed to parse response as JSON:', parseError);
-      throw new Error(`Invalid response from server: ${responseText}`);
+    const { data, error } = await supabase
+      .from('properties')
+      .insert([payload])
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Supabase error:", error);
+      throw new Error(error.message || 'Failed to create property');
     }
-    
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to create property');
-    }
-    
-    return data.property;
-  } catch (error) {
-    console.error('❌ createProperty error:', error);
-    throw error;
+
+    console.log("Property created successfully:", data);
+    return data;
+  } catch (error: any) {
+    console.error('Error creating property:', error);
+    throw new Error(error.message || 'Failed to create property');
   }
 }
 

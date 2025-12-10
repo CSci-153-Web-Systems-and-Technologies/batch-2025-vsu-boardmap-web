@@ -8,7 +8,7 @@ interface PropertyFormProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: () => void;
-  accessToken: string;
+  accessToken?: string;
   property?: Property;
   currentUser?: {
     id: string;
@@ -164,13 +164,13 @@ export default function PropertyForm({
         gender: property.gender || "Any",
         bedrooms: property.bedrooms || 1,
         bathrooms: property.bathrooms || 1,
-        ownerPhone: property.ownerPhone || "",
+        ownerPhone: property.owner_phone || "",
         rooms: property.rooms || [],
         images: property.images || [],
         availability: property.availability || "Available",
-        ownerId: property.ownerId || currentUser?.id || "",
-        ownerName: property.ownerName || currentUser?.name || "",
-        ownerEmail: property.ownerEmail || currentUser?.email || "",
+        ownerId: property.owner_id || currentUser?.id || "",
+        ownerName: property.owner_name || currentUser?.name || "",
+        ownerEmail: property.owner_email || currentUser?.email || "",
       });
       setNumRooms(property.rooms?.length || 0);
     }
@@ -292,74 +292,88 @@ export default function PropertyForm({
         return;
       }
 
-      // ✅ ADD THIS LOCATION VALIDATION
-      if (
-        !formData.location ||
-        !formData.location.lat ||
-        !formData.location.lng
-      ) {
-        toast.error("Please click on the map to set a location");
-        return;
-      }
-
       // Photo validation
       if (!formData.images || formData.images.length === 0) {
         toast.error("Please add at least one photo of your property");
         return;
       }
 
-      // ✅ CREATE COMPLETE FORM DATA WITH ALL REQUIRED FIELDS
-      const completeFormData = {
-        ...formData,
-        // Required fields for Edge Function:
+      // ✅ ADD THIS: Log the complete data before sending
+      console.log("📝 Form data before sending:", {
+        title: formData.title,
+        price: Number(formData.price),
+        address: formData.address,
+        description: formData.description,
+        bedrooms: Number(formData.bedrooms) || 1,
+        bathrooms: Number(formData.bathrooms) || 1,
+        amenities: formData.amenities || [],
+        images: formData.images || [],
+        rooms: formData.rooms || [],
+        location: formData.location || { lat: 10.6777, lng: 124.8009 },
+        ownerId: user?.id || currentUser.id,
+        ownerName: user?.user_metadata?.name || currentUser.name,
+        ownerEmail: user?.email || currentUser.email,
+      });
+
+      // ✅ CREATE A CLEAN PAYLOAD THAT MATCHES YOUR DATABASE SCHEMA
+      const payload = {
         title: formData.title,
         description: formData.description,
         price: Number(formData.price),
         address: formData.address,
-        location: formData.location,
-        type: formData.type || "Apartment",
+        location: formData.location || { lat: 10.6777, lng: 124.8009 },
+        type: formData.type || "Studio",
         gender: formData.gender || "Any",
         bedrooms: Number(formData.bedrooms) || 1,
         bathrooms: Number(formData.bathrooms) || 1,
-        // Owner info (should come from your user session):
-        ownerId: user?.id || currentUser.id,
-        ownerName: user?.user_metadata?.name || currentUser.name,
-        ownerEmail: user?.email || currentUser.email,
-        // Optional fields with defaults:
         amenities: formData.amenities || [],
         images: formData.images || [],
         rooms: formData.rooms || [],
         availability: formData.availability || "Available",
-        ownerPhone: formData.ownerPhone || "",
+        owner_phone: formData.ownerPhone || "",
+        owner_id: user?.id || currentUser.id,
+        owner_name: user?.user_metadata?.name || currentUser.name,
+        owner_email: user?.email || currentUser.email,
       };
 
-      console.log("🔧 Complete form data being submitted:", completeFormData);
+      console.log("🚀 Sending payload to API:", payload);
 
-      // ✅ VALIDATE OWNER INFORMATION
-      if (
-        !completeFormData.ownerId ||
-        !completeFormData.ownerName ||
-        !completeFormData.ownerEmail
-      ) {
-        toast.error(
-          "Missing owner information. Please ensure you're logged in."
-        );
-        return;
-      }
-
+      let result;
       if (property) {
-        await updateProperty(property.id, completeFormData, accessToken);
-        toast.success("Property updated successfully!");
+        result = await updateProperty(property.id, payload);
       } else {
-        await createProperty(completeFormData, accessToken);
-        toast.success("Property created successfully!");
+        result = await createProperty(payload);
       }
+
+      console.log("✅ API Response:", result);
+
+      toast.success(
+        property
+          ? "Property updated successfully!"
+          : "Property created successfully!"
+      );
 
       onSave();
       onClose();
     } catch (error: any) {
-      console.error("Error saving property:", error);
-      toast.error(error.message || "Failed to save property");
+      console.error("❌ Error saving property:", error);
+      console.error("Error details:", {
+        message: error.message,
+        status: error.status,
+        statusText: error.statusText,
+        data: error.data,
+      });
+
+      // Show more specific error messages
+      if (error.message?.includes("Not Found")) {
+        toast.error("API endpoint not found. Please check server connection.");
+      } else if (error.message?.includes("Network Error")) {
+        toast.error("Network error. Please check your connection.");
+      } else if (error.status === 401) {
+        toast.error("Authentication failed. Please log in again.");
+      } else {
+        toast.error(error.message || "Failed to save property");
+      }
     } finally {
       setLoading(false);
     }
