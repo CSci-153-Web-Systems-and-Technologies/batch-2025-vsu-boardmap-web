@@ -262,11 +262,11 @@ function MobileMenu({
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[200] md:hidden"
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9998] md:hidden"
       onClick={onClose}
     >
       <div
-        className="absolute right-0 top-0 h-full w-[300px] bg-gradient-to-b from-[#597445] to-[#4f6f52] shadow-2xl z-[300] flex flex-col"
+        className="absolute right-0 top-0 h-full w-[280px] bg-[#597445] shadow-2xl z-[9999]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-6 border-b border-[#79ac78] flex items-center justify-between">
@@ -1113,7 +1113,40 @@ export default function StudentDashboard({
         onFilterClick={() => setIsFilterOpen(true)}
       />
 
-      {/* Main Content Area */}
+      {/* ===== MODALS COME FIRST (BEFORE MAP) ===== */}
+      {/* This ensures they appear above the map in stacking context */}
+
+      <FilterModal
+        isOpen={isFilterOpen}
+        onClose={() => setIsFilterOpen(false)}
+        filters={filters}
+        onApply={handleApplyFilters}
+      />
+
+      <MobileMenu
+        isOpen={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
+        onLogout={onLogout}
+        onMessagesClick={() => {
+          setIsMobileMenuOpen(false);
+          setCurrentPage("messages");
+        }}
+        onAboutClick={() => {
+          setIsMobileMenuOpen(false);
+        }}
+        onContactClick={() => {
+          setIsMobileMenuOpen(false);
+        }}
+      />
+
+      {selectedProperty && (
+        <PropertyDetails
+          property={selectedProperty}
+          onClose={() => setSelectedProperty(null)}
+        />
+      )}
+
+      {/* Main Content Area - MAP COMES AFTER MODALS */}
       <div className="flex-1 flex flex-col mt-[130px] md:mt-[160px] px-4 md:px-[50px] pb-6">
         <div className="flex h-[calc(100vh-380px)] md:h-[calc(100vh-360px)] min-h-[500px] max-h-[1000px] rounded-[15px] shadow-[0px_0px_20px_0px_#597445] overflow-hidden">
           {loading ? (
@@ -1159,31 +1192,6 @@ export default function StudentDashboard({
           </div>
         )}
       </div>
-
-      {/* Modals */}
-      <FilterModal
-        isOpen={isFilterOpen}
-        onClose={() => setIsFilterOpen(false)}
-        filters={filters}
-        onApply={handleApplyFilters}
-      />
-
-      {selectedProperty && (
-        <PropertyDetails
-          property={selectedProperty}
-          onClose={() => setSelectedProperty(null)}
-        />
-      )}
-
-      {/* Mobile Menu */}
-      <MobileMenu
-        isOpen={isMobileMenuOpen}
-        onClose={() => setIsMobileMenuOpen(false)}
-        onLogout={handleLogout}
-        onMessagesClick={handleMessagesClick}
-        onAboutClick={() => setIsMobileMenuOpen(false)}
-        onContactClick={() => setIsMobileMenuOpen(false)}
-      />
     </div>
   );
 }

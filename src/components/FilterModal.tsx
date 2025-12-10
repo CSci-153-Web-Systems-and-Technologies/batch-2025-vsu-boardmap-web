@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState } from "react";
 import svgPaths from "../imports/svg-kdfhcdtos";
-import { FilterOptions } from '../utils/api';
+import { FilterOptions } from "../utils/api";
 
 interface FilterModalProps {
   isOpen: boolean;
@@ -12,16 +12,33 @@ interface FilterModalProps {
 function X() {
   return (
     <div className="relative shrink-0 size-6 md:size-[30px]">
-      <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 30 30">
+      <svg
+        className="block size-full"
+        fill="none"
+        preserveAspectRatio="none"
+        viewBox="0 0 30 30"
+      >
         <g id="X">
-          <path d={svgPaths.p6985300} id="Icon" stroke="var(--stroke-0, #597445)" strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" />
+          <path
+            d={svgPaths.p6985300}
+            id="Icon"
+            stroke="var(--stroke-0, #597445)"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="4"
+          />
         </g>
       </svg>
     </div>
   );
 }
 
-export default function FilterModal({ isOpen, onClose, filters, onApply }: FilterModalProps) {
+export default function FilterModal({
+  isOpen,
+  onClose,
+  filters,
+  onApply,
+}: FilterModalProps) {
   const [localFilters, setLocalFilters] = useState<FilterOptions>(filters);
 
   if (!isOpen) return null;
@@ -53,12 +70,17 @@ export default function FilterModal({ isOpen, onClose, filters, onApply }: Filte
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[150] p-4">
-      <div className="bg-[#e7f0dc] rounded-[20px] shadow-[0px_0px_20px_0px_rgba(89,116,69,0.3)] w-full max-w-[90vw] md:max-w-[600px] max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center modal-overlay z-[150] p-4">
+      <div className="bg-[#e7f0dc] rounded-[20px] shadow-[0px_0px_20px_0px_rgba(89,116,69,0.3)] w-full max-w-[90vw] md:max-w-[600px] max-h-[90vh] overflow-y-auto filter-modal">
         <div className="sticky top-0 bg-[#e7f0dc] border-b-4 border-[#597445] p-4 md:p-6 z-10 rounded-t-[20px]">
           <div className="flex items-center justify-between">
-            <h2 className="font-['REM:SemiBold',sans-serif] text-[24px] md:text-[32px] text-[#4f6f52]">Filters</h2>
-            <button onClick={onClose} className="cursor-pointer hover:opacity-70 transition-opacity p-2">
+            <h2 className="font-['REM:SemiBold',sans-serif] text-[24px] md:text-[32px] text-[#4f6f52]">
+              Filters
+            </h2>
+            <button
+              onClick={onClose}
+              className="cursor-pointer hover:opacity-70 transition-opacity p-2"
+            >
               <X />
             </button>
           </div>
@@ -75,10 +97,15 @@ export default function FilterModal({ isOpen, onClose, filters, onApply }: Filte
                 <input
                   type="number"
                   value={localFilters.priceRange[0]}
-                  onChange={(e) => setLocalFilters({
-                    ...localFilters,
-                    priceRange: [parseInt(e.target.value) || 0, localFilters.priceRange[1]]
-                  })}
+                  onChange={(e) =>
+                    setLocalFilters({
+                      ...localFilters,
+                      priceRange: [
+                        parseInt(e.target.value) || 0,
+                        localFilters.priceRange[1],
+                      ],
+                    })
+                  }
                   placeholder="Min"
                   className="bg-white border-2 border-[#597445] rounded-[10px] px-4 py-2 w-full text-[#4f6f52] outline-none focus:ring-2 focus:ring-[#79ac78]"
                 />
@@ -86,10 +113,15 @@ export default function FilterModal({ isOpen, onClose, filters, onApply }: Filte
                 <input
                   type="number"
                   value={localFilters.priceRange[1]}
-                  onChange={(e) => setLocalFilters({
-                    ...localFilters,
-                    priceRange: [localFilters.priceRange[0], parseInt(e.target.value) || 10000]
-                  })}
+                  onChange={(e) =>
+                    setLocalFilters({
+                      ...localFilters,
+                      priceRange: [
+                        localFilters.priceRange[0],
+                        parseInt(e.target.value) || 10000,
+                      ],
+                    })
+                  }
                   placeholder="Max"
                   className="bg-white border-2 border-[#597445] rounded-[10px] px-4 py-2 w-full text-[#4f6f52] outline-none focus:ring-2 focus:ring-[#79ac78]"
                 />
@@ -100,10 +132,15 @@ export default function FilterModal({ isOpen, onClose, filters, onApply }: Filte
                 max="10000"
                 step="100"
                 value={localFilters.priceRange[1]}
-                onChange={(e) => setLocalFilters({
-                  ...localFilters,
-                  priceRange: [localFilters.priceRange[0], parseInt(e.target.value)]
-                })}
+                onChange={(e) =>
+                  setLocalFilters({
+                    ...localFilters,
+                    priceRange: [
+                      localFilters.priceRange[0],
+                      parseInt(e.target.value),
+                    ],
+                  })
+                }
                 className="w-full accent-[#79ac78]"
               />
             </div>
@@ -115,17 +152,28 @@ export default function FilterModal({ isOpen, onClose, filters, onApply }: Filte
               Property Type
             </label>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
-              {['Studio', 'Private Room', 'Shared Room', 'Bed Space', 'Apartment'].map((type) => (
+              {[
+                "Studio",
+                "Private Room",
+                "Shared Room",
+                "Bed Space",
+                "Apartment",
+              ].map((type) => (
                 <button
                   key={type}
-                  onClick={() => setLocalFilters({
-                    ...localFilters,
-                    propertyTypes: toggleArrayFilter(localFilters.propertyTypes, type)
-                  })}
+                  onClick={() =>
+                    setLocalFilters({
+                      ...localFilters,
+                      propertyTypes: toggleArrayFilter(
+                        localFilters.propertyTypes,
+                        type
+                      ),
+                    })
+                  }
                   className={`px-3 md:px-4 py-2 rounded-[10px] font-['Rethink_Sans:Medium',sans-serif] text-[14px] md:text-[16px] transition-all ${
                     localFilters.propertyTypes.includes(type)
-                      ? 'bg-[#79ac78] text-white shadow-[0px_0px_10px_0px_rgba(121,172,120,0.5)]'
-                      : 'bg-white text-[#597445] border-2 border-[#597445]'
+                      ? "bg-[#79ac78] text-white shadow-[0px_0px_10px_0px_rgba(121,172,120,0.5)]"
+                      : "bg-white text-[#597445] border-2 border-[#597445]"
                   }`}
                 >
                   {type}
@@ -140,17 +188,19 @@ export default function FilterModal({ isOpen, onClose, filters, onApply }: Filte
               Gender Preference
             </label>
             <div className="flex gap-2 md:gap-3">
-              {['Male', 'Female', 'Any'].map((gender) => (
+              {["Male", "Female", "Any"].map((gender) => (
                 <button
                   key={gender}
-                  onClick={() => setLocalFilters({
-                    ...localFilters,
-                    gender: toggleArrayFilter(localFilters.gender, gender)
-                  })}
+                  onClick={() =>
+                    setLocalFilters({
+                      ...localFilters,
+                      gender: toggleArrayFilter(localFilters.gender, gender),
+                    })
+                  }
                   className={`flex-1 px-3 md:px-4 py-2 rounded-[10px] font-['Rethink_Sans:Medium',sans-serif] text-[14px] md:text-[16px] transition-all ${
                     localFilters.gender.includes(gender)
-                      ? 'bg-[#79ac78] text-white shadow-[0px_0px_10px_0px_rgba(121,172,120,0.5)]'
-                      : 'bg-white text-[#597445] border-2 border-[#597445]'
+                      ? "bg-[#79ac78] text-white shadow-[0px_0px_10px_0px_rgba(121,172,120,0.5)]"
+                      : "bg-white text-[#597445] border-2 border-[#597445]"
                   }`}
                 >
                   {gender}
@@ -165,17 +215,31 @@ export default function FilterModal({ isOpen, onClose, filters, onApply }: Filte
               Amenities
             </label>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
-              {['WiFi', 'Air Conditioning', 'Kitchen', 'Parking', 'Laundry', 'Security', 'Study Desk', 'Water'].map((amenity) => (
+              {[
+                "WiFi",
+                "Air Conditioning",
+                "Kitchen",
+                "Parking",
+                "Laundry",
+                "Security",
+                "Study Desk",
+                "Water",
+              ].map((amenity) => (
                 <button
                   key={amenity}
-                  onClick={() => setLocalFilters({
-                    ...localFilters,
-                    amenities: toggleArrayFilter(localFilters.amenities, amenity)
-                  })}
+                  onClick={() =>
+                    setLocalFilters({
+                      ...localFilters,
+                      amenities: toggleArrayFilter(
+                        localFilters.amenities,
+                        amenity
+                      ),
+                    })
+                  }
                   className={`px-3 md:px-4 py-2 rounded-[10px] font-['Rethink_Sans:Medium',sans-serif] text-[13px] md:text-[15px] transition-all ${
                     localFilters.amenities.includes(amenity)
-                      ? 'bg-[#79ac78] text-white shadow-[0px_0px_10px_0px_rgba(121,172,120,0.5)]'
-                      : 'bg-white text-[#597445] border-2 border-[#597445]'
+                      ? "bg-[#79ac78] text-white shadow-[0px_0px_10px_0px_rgba(121,172,120,0.5)]"
+                      : "bg-white text-[#597445] border-2 border-[#597445]"
                   }`}
                 >
                   {amenity}
@@ -190,17 +254,22 @@ export default function FilterModal({ isOpen, onClose, filters, onApply }: Filte
               Availability
             </label>
             <div className="flex gap-2 md:gap-3">
-              {['Available', 'Occupied'].map((status) => (
+              {["Available", "Occupied"].map((status) => (
                 <button
                   key={status}
-                  onClick={() => setLocalFilters({
-                    ...localFilters,
-                    availability: toggleArrayFilter(localFilters.availability, status)
-                  })}
+                  onClick={() =>
+                    setLocalFilters({
+                      ...localFilters,
+                      availability: toggleArrayFilter(
+                        localFilters.availability,
+                        status
+                      ),
+                    })
+                  }
                   className={`flex-1 px-3 md:px-4 py-2 rounded-[10px] font-['Rethink_Sans:Medium',sans-serif] text-[14px] md:text-[16px] transition-all ${
                     localFilters.availability.includes(status)
-                      ? 'bg-[#79ac78] text-white shadow-[0px_0px_10px_0px_rgba(121,172,120,0.5)]'
-                      : 'bg-white text-[#597445] border-2 border-[#597445]'
+                      ? "bg-[#79ac78] text-white shadow-[0px_0px_10px_0px_rgba(121,172,120,0.5)]"
+                      : "bg-white text-[#597445] border-2 border-[#597445]"
                   }`}
                 >
                   {status}
@@ -218,17 +287,19 @@ export default function FilterModal({ isOpen, onClose, filters, onApply }: Filte
               {[0, 3.0, 3.5, 4.0, 4.5].map((rating) => (
                 <button
                   key={rating}
-                  onClick={() => setLocalFilters({
-                    ...localFilters,
-                    rating
-                  })}
+                  onClick={() =>
+                    setLocalFilters({
+                      ...localFilters,
+                      rating,
+                    })
+                  }
                   className={`flex-1 px-3 md:px-4 py-2 rounded-[10px] font-['Rethink_Sans:Medium',sans-serif] text-[14px] md:text-[16px] transition-all ${
                     localFilters.rating === rating
-                      ? 'bg-[#79ac78] text-white shadow-[0px_0px_10px_0px_rgba(121,172,120,0.5)]'
-                      : 'bg-white text-[#597445] border-2 border-[#597445]'
+                      ? "bg-[#79ac78] text-white shadow-[0px_0px_10px_0px_rgba(121,172,120,0.5)]"
+                      : "bg-white text-[#597445] border-2 border-[#597445]"
                   }`}
                 >
-                  {rating === 0 ? 'Any' : `${rating}★`}
+                  {rating === 0 ? "Any" : `${rating}★`}
                 </button>
               ))}
             </div>

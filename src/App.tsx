@@ -4,6 +4,7 @@ import LoadingScreen from './components/LoadingScreen';
 import LandingPage from './components/LandingPage';
 import StudentDashboard from './components/StudentDashboard';
 import OwnerDashboard from './components/OwnerDashboard';
+import { createClient } from './utils/supabase/client'; // Import your Supabase client
 
 export type User = {
   id: string;
@@ -44,10 +45,29 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    // Initialize - no sample data needed anymore
+    // Initialize and check for existing session
     async function initialize() {
       try {
-        // No initialization needed - data is now dynamic
+        const supabase = createClient();
+        
+        // Check for existing session
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.user) {
+          // User is already logged in, restore their session
+          const userData = {
+            id: session.user.id,
+            name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
+            email: session.user.email!,
+            type: session.user.user_metadata?.type as 'student' | 'owner' || 'student', // Default to student if not specified
+            accessToken: session.access_token
+          };
+          
+          setUser(userData);
+          setCurrentPage('dashboard');
+          console.log('Restored existing session for:', userData.email);
+        }
+        
         console.log('App initialized');
       } catch (err) {
         console.error('Error initializing:', err);
@@ -63,14 +83,53 @@ export default function App() {
     }
   }, [initialized]);
 
+  // Add auth state listener to handle session changes
+  useEffect(() => {
+    const supabase = createClient();
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state changed:', event);
+        
+        if (event === 'SIGNED_IN' && session) {
+          const userData = {
+            id: session.user.id,
+            name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
+            email: session.user.email!,
+            type: session.user.user_metadata?.type as 'student' | 'owner' || 'student',
+            accessToken: session.access_token
+          };
+          
+          setUser(userData);
+          setCurrentPage('dashboard');
+        } else if (event === 'SIGNED_OUT') {
+          setUser(null);
+          setCurrentPage('landing');
+        } else if (event === 'TOKEN_REFRESHED' && session) {
+          // Update access token if refreshed
+          setUser(prev => prev ? { ...prev, accessToken: session.access_token } : null);
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   const handleLogin = (id: string, name: string, email: string, type: 'student' | 'owner', accessToken: string) => {
     setUser({ id, name, email, type, accessToken });
     setCurrentPage('dashboard');
   };
 
-  const handleLogout = () => {
-    setUser(null);
-    setCurrentPage('landing');
+  const handleLogout = async () => {
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Error during logout:', error);
+    } finally {
+      setUser(null);
+      setCurrentPage('landing');
+    }
   };
 
   if (loading) {
