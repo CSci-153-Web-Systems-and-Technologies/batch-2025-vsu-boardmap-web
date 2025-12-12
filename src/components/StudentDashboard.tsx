@@ -1,8 +1,25 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import svgPaths from "../imports/svg-xxo13nfqz5";
+import {
+  Property,
+  FilterOptions,
+  getProperties,
+  filterProperties,
+} from "../utils/api";
 import { Menu, X } from "lucide-react";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import "../styles/global.css";
+
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: require("leaflet/dist/images/marker-icon-2x.png"),
+  iconUrl: require("leaflet/dist/images/marker-icon.png"),
+  shadowUrl: require("leaflet/dist/images/marker-shadow.png"),
+});
 
 // Mock SVG paths - in a real app, these would be imported
-const svgPaths = {
+const localSvgPaths = {
   p3ffc9300:
     "M9 21v-8.4a.6.6 0 0 1 .6-.6h4.8a.6.6 0 0 1 .6.6V21M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9z",
   p20d61300:
@@ -13,68 +30,6 @@ const svgPaths = {
   p27875740: "M3 12h.01M3 18h.01M3 6h.01M8 12h13M8 18h13M8 6h13",
 };
 
-// Types and API functions
-interface Property {
-  id: string;
-  name: string;
-  price: number;
-  location: { lat: number; lng: number };
-  type: string;
-  rating: number;
-  description?: string;
-  amenities?: string[];
-  images?: string[];
-}
-
-interface FilterOptions {
-  priceRange: [number, number];
-  propertyTypes: string[];
-  gender: string[];
-  amenities: string[];
-  availability: string[];
-  rating: number;
-}
-
-// Mock API functions
-async function getProperties(): Promise<Property[]> {
-  // In real app, this would fetch from API
-  return [
-    {
-      id: "1",
-      name: "Sample Property",
-      price: 5000,
-      location: { lat: 10.6777, lng: 124.8009 },
-      type: "Studio",
-      rating: 4.5,
-      description: "A cozy studio near the university",
-      amenities: ["WiFi", "Aircon", "Kitchen"],
-      images: ["https://images.unsplash.com/photo-1560448204-e02f11c3d0e2"],
-    },
-    {
-      id: "2",
-      name: "Modern Apartment",
-      price: 8000,
-      location: { lat: 10.679, lng: 124.803 },
-      type: "Apartment",
-      rating: 4.8,
-      description: "Modern apartment with great amenities",
-      amenities: ["WiFi", "Parking", "Gym"],
-      images: ["https://images.unsplash.com/photo-1545324418-cc1a3fa10c00"],
-    },
-  ];
-}
-
-function filterProperties(
-  properties: Property[],
-  filters: FilterOptions
-): Property[] {
-  return properties.filter((property) => {
-    const [minPrice, maxPrice] = filters.priceRange;
-    return property.price >= minPrice && property.price <= maxPrice;
-  });
-}
-
-// Components
 function HomeIcon() {
   return (
     <div className="size-[38px] md:size-[32px]">
@@ -251,11 +206,11 @@ function MobileMenu({
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[200] md:hidden"
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9998] md:hidden"
       onClick={onClose}
     >
       <div
-        className="absolute right-0 top-0 h-full w-[300px] bg-gradient-to-b from-[#597445] to-[#4f6f52] shadow-2xl z-[300] flex flex-col"
+        className="absolute right-0 top-0 h-full w-[280px] bg-[#597445] shadow-2xl z-[9999]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-6 border-b border-[#79ac78] flex items-center justify-between">
@@ -454,7 +409,9 @@ function MapListAndFilter({
         className="bg-white h-[40px] md:h-[45px] rounded-[25px] px-6 shadow-lg hover:bg-[#f5f5f5] transition-all duration-200 flex items-center gap-2 hover:shadow-xl"
       >
         <ListIcon />
-        <span className="text-[#597445] font-medium text-[15px] md:text-[18px]">Filters</span>
+        <span className="text-[#597445] font-medium text-[15px] md:text-[18px]">
+          Filters
+        </span>
       </button>
     </div>
   );
@@ -473,7 +430,7 @@ function PropertyCard({
       className="bg-white border border-[#597445] rounded-[18px] p-5 md:p-6 cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
     >
       <h3 className="font-bold text-[#4f6f52] text-[18px] md:text-[20px] truncate">
-        {property.name}
+        {property.title}
       </h3>
       <p className="text-[#79ac78] mt-3 font-semibold text-[20px] md:text-[22px]">
         ₱{property.price.toLocaleString()}/month
@@ -499,12 +456,12 @@ function PropertyDetails({
   onClose: () => void;
 }) {
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 md:p-6">
-      <div className="bg-white rounded-[20px] max-w-4xl w-full max-h-[90vh] overflow-y-auto z-[1000] shadow-2xl">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[10000] p-4 md:p-6">
+      <div className="bg-white rounded-[20px] max-w-4xl w-full max-h-[90vh] overflow-y-auto z-[10001] shadow-2xl">
         <div className="p-6">
           <div className="flex justify-between items-start mb-6">
             <h2 className="text-2xl md:text-3xl font-bold text-[#4f6f52]">
-              {property.name}
+              {property.title}
             </h2>
             <button
               onClick={onClose}
@@ -561,178 +518,274 @@ function Map({
   properties: Property[];
   onPropertyClick: (property: Property) => void;
 }) {
-  const [map, setMap] = useState<any>(null);
-  const [L, setL] = useState<any>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
-  const markersRef = useRef<any[]>([]);
-  const mapInitializedRef = useRef(false);
+  const mapRef = useRef<L.Map | null>(null);
+  const markersRef = useRef<L.Marker[]>([]);
+  const isInitializedRef = useRef(false);
 
-  // Initialize Leaflet - load it properly
+  // Initialize map
   useEffect(() => {
-    let mounted = true;
+    if (!mapContainerRef.current || isInitializedRef.current) return;
 
-    // Check if Leaflet is already loaded
-    if (window.L) {
-      setL(window.L);
-      return;
-    }
+    console.log("Initializing map...");
 
-    // Load Leaflet dynamically
-    import("leaflet")
-      .then((leaflet) => {
-        if (mounted) {
-          setL(leaflet.default);
-        }
-      })
-      .catch((error) => {
-        console.error("Error loading Leaflet:", error);
-      });
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  // Initialize map when container is ready and L is loaded
-  useEffect(() => {
-    if (!L || !mapContainerRef.current || mapInitializedRef.current) return;
-
-    const mapInstance = L.map(mapContainerRef.current, {
+    // Create map instance
+    mapRef.current = L.map(mapContainerRef.current, {
       center: [10.6777, 124.8009],
       zoom: 14,
       zoomControl: true,
+      attributionControl: false,
     });
 
+    // Add tile layer
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: "© OpenStreetMap contributors",
+      attribution:
+        '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       maxZoom: 19,
-    }).addTo(mapInstance);
+    }).addTo(mapRef.current);
 
-    setMap(mapInstance);
-    mapInitializedRef.current = true;
+    // Add zoom control
+    L.control
+      .zoom({
+        position: "topright",
+      })
+      .addTo(mapRef.current);
 
-    // Invalidate size after a small delay
+    // Invalidate size after a delay to ensure proper rendering
     setTimeout(() => {
-      mapInstance.invalidateSize();
+      mapRef.current?.invalidateSize();
     }, 100);
 
-    return () => {
-      if (mapInstance) {
-        mapInstance.remove();
-      }
-      mapInitializedRef.current = false;
-    };
-  }, [L]);
+    isInitializedRef.current = true;
 
-  // Update markers when properties or map changes
+    // Cleanup
+    return () => {
+      console.log("Cleaning up map...");
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+      markersRef.current = [];
+      isInitializedRef.current = false;
+    };
+  }, []);
+
+  // Update markers when properties change
   useEffect(() => {
-    if (!map || !L || !properties || properties.length === 0) {
+    if (!mapRef.current || !properties.length) {
+      console.log(
+        "Map not ready or no properties:",
+        mapRef.current,
+        properties.length
+      );
       return;
     }
+
+    console.log("Updating markers with", properties.length, "properties");
 
     // Clear existing markers
     if (markersRef.current.length > 0) {
       markersRef.current.forEach((marker) => {
-        if (marker && map && map.removeLayer) {
-          map.removeLayer(marker);
+        if (marker && mapRef.current) {
+          marker.remove();
         }
       });
       markersRef.current = [];
     }
 
-    // Add new markers
-    const newMarkers: any[] = [];
+    // Create new markers
+    const bounds = L.latLngBounds([]);
+    const newMarkers: L.Marker[] = [];
 
     properties.forEach((property) => {
       try {
-        // Create a simple marker first
+        // Create custom icon
+        const customIcon = L.divIcon({
+          className: "custom-marker",
+          html: `
+            <div style="
+              background: #79ac78;
+              color: white;
+              padding: 6px 12px;
+              border-radius: 20px;
+              border: 2px solid white;
+              font-weight: bold;
+              font-size: 13px;
+              cursor: pointer;
+              box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+              white-space: nowrap;
+              min-width: 80px;
+              text-align: center;
+              z-index: 1000;
+            ">
+              ₱${property.price.toLocaleString()}
+            </div>
+          `,
+          iconSize: [100, 40],
+          iconAnchor: [50, 40],
+          popupAnchor: [0, -40],
+        });
+
+        // Create marker
         const marker = L.marker(
           [property.location.lat, property.location.lng],
           {
-            title: property.name,
-            icon: L.divIcon({
-              className: "custom-marker",
-              html: `
-              <div style="
-                background: #79ac78; 
-                color: white; 
-                padding: 8px 12px; 
-                border-radius: 20px; 
-                border: 2px solid white;
-                font-weight: bold;
-                font-size: 13px;
-                cursor: pointer;
-                box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-                white-space: nowrap;
-              ">
-                ₱${property.price.toLocaleString()}
-              </div>
-            `,
-              iconSize: [100, 40],
-              iconAnchor: [50, 40],
-            }),
+            icon: customIcon,
+            title: property.title,
           }
-        ).addTo(map);
-
-        marker.on("click", () => onPropertyClick(property));
+        ).addTo(mapRef.current!);
 
         // Add popup
         marker.bindPopup(`
-          <div style="min-width: 200px;">
-            <h3 style="margin: 0 0 8px 0; color: #4f6f52;">${property.name}</h3>
-            <p style="margin: 0 0 4px 0; color: #79ac78; font-weight: bold;">₱${property.price.toLocaleString()}/month</p>
-            <p style="margin: 0 0 4px 0;">${property.type}</p>
-            <p style="margin: 0;">Rating: ${property.rating} ★</p>
+          <div style="min-width: 200px; padding: 10px;">
+            <h3 style="margin: 0 0 8px 0; color: #4f6f52; font-size: 16px; font-weight: bold;">${
+              property.title
+            }</h3>
+            <p style="margin: 0 0 4px 0; color: #79ac78; font-weight: bold; font-size: 18px;">₱${property.price.toLocaleString()}/month</p>
+            <p style="margin: 0 0 4px 0; color: #666; font-size: 14px;">${
+              property.type
+            }</p>
+            <p style="margin: 0 0 8px 0; color: #666; font-size: 14px;">${
+              property.address || "No address provided"
+            }</p>
+            <button style="
+              background: #4f6f52;
+              color: white;
+              border: none;
+              padding: 8px 16px;
+              border-radius: 8px;
+              cursor: pointer;
+              font-size: 14px;
+              font-weight: bold;
+              margin-top: 8px;
+              width: 100%;
+            " onclick="window.dispatchEvent(new CustomEvent('propertyClick', { detail: '${
+              property.id
+            }' }))">
+              View Details
+            </button>
           </div>
         `);
 
+        // Add click handler
+        marker.on("click", () => {
+          console.log("Marker clicked:", property.title);
+          onPropertyClick(property);
+        });
+
         newMarkers.push(marker);
+        bounds.extend([property.location.lat, property.location.lng]);
       } catch (error) {
-        console.error("Error creating marker:", error);
+        console.error(
+          "Error creating marker for property:",
+          property.title,
+          error
+        );
       }
     });
 
     markersRef.current = newMarkers;
 
-    // Fit bounds to show all markers
+    // Fit bounds if we have markers
     if (newMarkers.length > 0) {
       try {
-        const group = L.featureGroup(newMarkers);
-        map.fitBounds(group.getBounds().pad(0.1));
+        // Add padding to bounds
+        mapRef.current?.fitBounds(bounds, {
+          padding: [50, 50],
+          maxZoom: 16,
+        });
       } catch (error) {
         console.error("Error fitting bounds:", error);
       }
     }
 
-    // Invalidate size after adding markers
+    // Invalidate size after markers are added
     setTimeout(() => {
-      map.invalidateSize();
+      mapRef.current?.invalidateSize();
     }, 200);
-  }, [map, L, properties, onPropertyClick]); // Fixed dependencies
+  }, [properties, onPropertyClick]);
+
+  // Handle window resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (mapRef.current) {
+        setTimeout(() => {
+          mapRef.current?.invalidateSize();
+        }, 150);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   return (
-    <div className="w-full h-full relative rounded-[15px] overflow-hidden z-0">
+    <div className="w-full h-full relative rounded-[15px] overflow-hidden">
       <style>{`
+        /* Ensure map container has proper dimensions */
         .leaflet-container {
-          width: 100% !important;
-          height: 100% !important;
+          width: 100%;
+          height: 100%;
           border-radius: 15px;
           z-index: 1;
         }
+        
+        /* Custom marker styling */
         .custom-marker {
-          background: none !important;
-          border: none !important;
+          background: transparent;
+          border: none;
+          z-index: 10;
         }
-        .leaflet-div-icon {
-          background: transparent !important;
-          border: none !important;
+        
+        /* Ensure popups are visible */
+        .leaflet-popup-content-wrapper {
+          border-radius: 10px;
+          box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+          z-index: 101;
+        }
+        
+        .leaflet-popup-content {
+          margin: 0;
+          z-index: 100;
+        }
+        
+        .leaflet-popup-tip {
+          background: white;
+        }
+        
+        /* Ensure map tiles load properly */
+        .leaflet-tile {
+          filter: none !important;
         }
       `}</style>
+
       <div
         ref={mapContainerRef}
         className="w-full h-full rounded-[15px]"
-        style={{ minHeight: "720px" }}
+        style={{ minHeight: "700px" }}
       />
+
+      {properties.length === 0 && !isInitializedRef.current && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-[15px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#597445] mx-auto mb-4"></div>
+            <p className="font-semibold text-[#597445]">Loading map...</p>
+          </div>
+        </div>
+      )}
+
+      {properties.length === 0 && isInitializedRef.current && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-100 rounded-[15px] bg-opacity-90">
+          <div className="text-center p-6">
+            <p className="font-semibold text-[#597445] text-lg mb-2">
+              No properties to display
+            </p>
+            <p className="text-gray-600">
+              Adjust your filters or check back later
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -979,6 +1032,10 @@ export default function StudentDashboard({
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(
     null
   );
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [filters, setFilters] = useState<FilterOptions>({
     priceRange: [0, 10000],
     propertyTypes: [],
@@ -999,11 +1056,27 @@ export default function StudentDashboard({
 
   async function loadProperties() {
     try {
+      setLoading(true);
+      setError(null);
+      console.log("Starting to load properties...");
+
       const properties = await getProperties();
+
+      console.log(
+        "Loaded properties for student:",
+        properties.length,
+        "properties"
+      );
+      console.log("Sample property:", properties[0]);
+
       setAllProperties(properties);
       setFilteredProperties(properties);
     } catch (err) {
       console.error("Error loading properties:", err);
+      setError("Failed to load properties. Please try again.");
+    } finally {
+      // IMPORTANT: Set loading to false whether successful or not
+      setLoading(false);
     }
   }
 
@@ -1077,7 +1150,6 @@ export default function StudentDashboard({
 
   return (
     <div className="bg-gradient-to-b from-[#e2f0d1] to-[#ffffff] via-[#e8f3da] min-h-screen w-full flex flex-col overflow-x-hidden">
-
       {/* LAYER 1: Header */}
       <Header
         user={user}
@@ -1093,10 +1165,64 @@ export default function StudentDashboard({
         onFilterClick={() => setIsFilterOpen(true)}
       />
 
-      {/* LAYER 3: Main Content Area */}
-      <div className="flex-1 flex flex-col mt-[130px] md:mt-[160px] px-4 md:px-[50px] pb-6 relative">
-        <div className="flex h-[calc(100vh-200px)] md:h-[calc(100vh-200px)] min-h-[500px] rounded-[15px] gap-4 md:gap-6 overflow-hidden">
-          {isMap ? (
+      {/* ===== MODALS COME FIRST (BEFORE MAP) ===== */}
+      {/* This ensures they appear above the map in stacking context */}
+
+      <FilterModal
+        isOpen={isFilterOpen}
+        onClose={() => setIsFilterOpen(false)}
+        filters={filters}
+        onApply={handleApplyFilters}
+      />
+
+      <MobileMenu
+        isOpen={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
+        onLogout={onLogout}
+        onMessagesClick={() => {
+          setIsMobileMenuOpen(false);
+          setCurrentPage("messages");
+        }}
+        onAboutClick={() => {
+          setIsMobileMenuOpen(false);
+        }}
+        onContactClick={() => {
+          setIsMobileMenuOpen(false);
+        }}
+      />
+
+      {selectedProperty && (
+        <PropertyDetails
+          property={selectedProperty}
+          onClose={() => setSelectedProperty(null)}
+        />
+      )}
+
+      {/* Main Content Area - MAP COMES AFTER MODALS */}
+      <div className="flex-1 flex flex-col mt-[130px] md:mt-[160px] px-4 md:px-[50px] pb-6">
+        <div className="flex h-[80vh] min-h-[600px] rounded-[15px] shadow-[0px_0px_20px_0px_#597445] overflow-hidden">
+          {loading ? (
+            <div className="w-full h-full flex items-center justify-center">
+              <div className="flex flex-col items-center gap-4">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#597445]"></div>
+                <p className="font-['Rethink_Sans:SemiBold',sans-serif] text-[20px] text-[#597445]">
+                  Loading properties...
+                </p>
+              </div>
+            </div>
+          ) : error ? (
+            <div className="w-full h-full flex flex-col items-center justify-center gap-4">
+              <p className="font-['Rethink_Sans:SemiBold',sans-serif] text-[20px] text-red-600">
+                {error}
+              </p>
+              <button
+                onClick={loadProperties}
+                className="bg-[#4f6f52] text-white rounded-[15px] px-6 py-2 font-['Rethink_Sans:SemiBold',sans-serif] hover:bg-[#3d5841] transition-colors"
+              >
+                Retry
+              </button>
+            </div>
+          ) : isMap ? (
             <Map
               properties={filteredProperties}
               onPropertyClick={handlePropertyClick}
@@ -1108,32 +1234,17 @@ export default function StudentDashboard({
             />
           )}
         </div>
+
+        {/* Debug info - you can remove this in production */}
+        {!loading && !error && (
+          <div className="mt-4 text-center">
+            <p className="font-['Rethink_Sans:Regular',sans-serif] text-[14px] text-[#597445]">
+              Showing {filteredProperties.length} of {allProperties.length}{" "}
+              properties
+            </p>
+          </div>
+        )}
       </div>
-
-      {/* Modals */}
-      <FilterModal
-        isOpen={isFilterOpen}
-        onClose={() => setIsFilterOpen(false)}
-        filters={filters}
-        onApply={handleApplyFilters}
-      />
-
-      {selectedProperty && (
-        <PropertyDetails
-          property={selectedProperty}
-          onClose={() => setSelectedProperty(null)}
-        />
-      )}
-
-      {/* Mobile Menu */}
-      <MobileMenu
-        isOpen={isMobileMenuOpen}
-        onClose={() => setIsMobileMenuOpen(false)}
-        onLogout={handleLogout}
-        onMessagesClick={handleMessagesClick}
-        onAboutClick={() => setIsMobileMenuOpen(false)}
-        onContactClick={() => setIsMobileMenuOpen(false)}
-      />
     </div>
   );
 }
