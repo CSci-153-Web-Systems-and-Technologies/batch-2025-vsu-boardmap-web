@@ -79,9 +79,9 @@ export default function FilterModal({
             </h2>
             <button
               onClick={onClose}
-              className="cursor-pointer hover:opacity-70 transition-opacity p-2"
+              className="text-[#597445] hover:opacity-100 transition-opacity text-3xl leading-none"
             >
-              <X />
+              ✕
             </button>
           </div>
         </div>
@@ -223,7 +223,12 @@ export default function FilterModal({
                 "Laundry",
                 "Security",
                 "Study Desk",
-                "Water",
+                "Free Water",
+                "Free Electricity",
+                "Television",
+                "Comfort Room",
+                "Smoking Allowed",
+                "Pets Allowed",
               ].map((amenity) => (
                 <button
                   key={amenity}
@@ -281,27 +286,52 @@ export default function FilterModal({
           {/* Minimum Rating */}
           <div>
             <label className="font-['Rethink_Sans:SemiBold',sans-serif] text-[16px] md:text-[18px] text-[#4f6f52] block mb-3">
-              Minimum Rating
+              Rating
             </label>
-            <div className="flex gap-2 md:gap-3">
-              {[0, 3.0, 3.5, 4.0, 4.5].map((rating) => (
-                <button
-                  key={rating}
-                  onClick={() =>
-                    setLocalFilters({
-                      ...localFilters,
-                      rating,
-                    })
-                  }
-                  className={`flex-1 px-3 md:px-4 py-2 rounded-[10px] font-['Rethink_Sans:Medium',sans-serif] text-[14px] md:text-[16px] transition-all ${
-                    localFilters.rating === rating
-                      ? "bg-[#79ac78] text-white shadow-[0px_0px_10px_0px_rgba(121,172,120,0.5)]"
-                      : "bg-white text-[#597445] border-2 border-[#597445]"
-                  }`}
-                >
-                  {rating === 0 ? "Any" : `${rating}★`}
-                </button>
-              ))}
+            <div className="space-y-2">
+              {/* First row: 0, 1.0, 1.5, 2.0, 2.5, 3.0 */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {[0, 1.0, 1.5, 2.0, 2.5, 3.0].map((rating) => (
+                  <button
+                    key={rating}
+                    onClick={() =>
+                      setLocalFilters({
+                        ...localFilters,
+                        rating,
+                      })
+                    }
+                    className={`px-2 py-2 rounded-[10px] font-['Rethink_Sans:Medium',sans-serif] text-[12px] md:text-[14px] transition-all ${
+                      localFilters.rating === rating
+                        ? "bg-[#79ac78] text-white shadow-[0px_0px_10px_0px_rgba(121,172,120,0.5)]"
+                        : "bg-white text-[#597445] border-2 border-[#597445]"
+                    }`}
+                  >
+                    {rating}★
+                  </button>
+                ))}
+              </div>
+
+              {/* Second row: 3.5, 4.0, 4.5, 5.0 */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {[3.5, 4.0, 4.5, 5.0].map((rating) => (
+                  <button
+                    key={rating}
+                    onClick={() =>
+                      setLocalFilters({
+                        ...localFilters,
+                        rating,
+                      })
+                    }
+                    className={`px-2 py-2 rounded-[10px] font-['Rethink_Sans:Medium',sans-serif] text-[12px] md:text-[14px] transition-all ${
+                      localFilters.rating === rating
+                        ? "bg-[#79ac78] text-white shadow-[0px_0px_10px_0px_rgba(121,172,120,0.5)]"
+                        : "bg-white text-[#597445] border-2 border-[#597445]"
+                    }`}
+                  >
+                    {rating}★
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
