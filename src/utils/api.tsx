@@ -1,5 +1,5 @@
-import { projectId, publicAnonKey } from './supabase/info';
-import { supabase } from './supabase/client';
+import { createClient as createSupabaseClient, SupabaseClient } from '@supabase/supabase-js';
+import { projectId, publicAnonKey } from "./supabase/info";
 
 const supabaseUrl = `https://${projectId}.supabase.co`;
 const supabaseAnonKey = publicAnonKey;
@@ -13,6 +13,9 @@ function createClient(): SupabaseClient {
   return _supabase;
 }
 
+// Initialize supabase client
+const supabase = createClient();
+
 export interface Room {
   roomNumber: string;
   maxOccupancy: number;
@@ -21,7 +24,7 @@ export interface Room {
 }
 
 export interface Property {
-id: string;
+  id: string;
   title: string;
   description: string;
   price: number;
@@ -36,12 +39,12 @@ id: string;
   images: string[];
   bedrooms: number;
   bathrooms: number;
-  owner_id: string; 
-  owner_name: string; 
-  owner_email: string; 
-  owner_phone?: string; 
+  owner_id: string;
+  owner_name: string;
+  owner_email: string;
+  owner_phone?: string;
   rooms?: Room[];
-  created_at: string; 
+  created_at: string;
   updated_at?: string;
 }
 
@@ -106,10 +109,10 @@ export interface FilterOptions {
 export async function getProperties(): Promise<Property[]> {
   try {
     const { data, error } = await supabase
-      .from('properties')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
+      .from("properties")
+      .select("*")
+      .order("created_at", { ascending: false });
+
     if (error) throw error;
     return data || [];
   } catch (error) {
@@ -121,11 +124,11 @@ export async function getProperties(): Promise<Property[]> {
 export async function getOwnerProperties(ownerId: string): Promise<Property[]> {
   try {
     const { data, error } = await supabase
-      .from('properties')
-      .select('*')
-      .eq('owner_id', ownerId)
-      .order('created_at', { ascending: false });
-    
+      .from("properties")
+      .select("*")
+      .eq("owner_id", ownerId)
+      .order("created_at", { ascending: false });
+
     if (error) throw error;
     return data || [];
   } catch (error) {
@@ -134,13 +137,32 @@ export async function getOwnerProperties(ownerId: string): Promise<Property[]> {
   }
 }
 
+interface PropertyInsert {
+  title: string;
+  description: string;
+  price: number;
+  address: string;
+  location: { lat: number; lng: number };
+  type: string;
+  gender: string;
+  bedrooms: number;
+  bathrooms: number;
+  amenities: string[];
+  images: string[];
+  availability: string;
+  owner_phone?: string;
+  owner_id: string;
+  owner_name: string;
+  owner_email: string;
+}
+
 export async function createProperty(propertyData: Partial<Property>): Promise<Property> {
   try {
     console.log("Creating property with data:", propertyData);
     
-    // Ensure required fields are present
+    // Ensure required fields are present - use title, not name
     const payload = {
-      title: propertyData.title,
+      title: propertyData.title,  // This should work now with updated interface
       description: propertyData.description || '',
       price: Number(propertyData.price) || 0,
       address: propertyData.address || '',
@@ -179,40 +201,42 @@ export async function createProperty(propertyData: Partial<Property>): Promise<P
   }
 }
 
-export async function updateProperty(id: string, updates: Partial<Property>): Promise<Property> {
+export async function updateProperty(
+  id: string,
+  updates: Partial<Property>
+): Promise<Property> {
   try {
     const { data, error } = await supabase
-      .from('properties')
+      .from("properties")
       .update(updates)
-      .eq('id', id)
+      .eq("id", id)
       .select()
       .single();
-    
+
     if (error) throw error;
     return data;
   } catch (error: any) {
-    console.error('Error updating property:', error);
-    throw new Error(error.message || 'Failed to update property');
+    console.error("Error updating property:", error);
+    throw new Error(error.message || "Failed to update property");
   }
 }
 
 export async function deleteProperty(id: string): Promise<void> {
   try {
-    const { error } = await supabase
-      .from('properties')
-      .delete()
-      .eq('id', id);
-    
+    const { error } = await supabase.from("properties").delete().eq("id", id);
+
     if (error) throw error;
   } catch (error: any) {
-    console.error('Error deleting property:', error);
-    throw new Error(error.message || 'Failed to delete property');
+    console.error("Error deleting property:", error);
+    throw new Error(error.message || "Failed to delete property");
   }
 }
 
-
 // Occupants API
-export async function getOccupants(ownerId: string, accessToken: string): Promise<Occupant[]> {
+export async function getOccupants(
+  ownerId: string,
+  accessToken: string
+): Promise<Occupant[]> {
   try {
     const response = await fetch(`${API_BASE}/occupants/owner/${ownerId}`, {
       headers: {
@@ -296,7 +320,10 @@ export async function deleteOccupant(
 }
 
 // Inquiries API
-export async function getInquiries(ownerId: string, accessToken: string): Promise<Inquiry[]> {
+export async function getInquiries(
+  ownerId: string,
+  accessToken: string
+): Promise<Inquiry[]> {
   try {
     const response = await fetch(`${API_BASE}/inquiries/owner/${ownerId}`, {
       headers: {
@@ -521,13 +548,22 @@ export function filterProperties(
   filters: FilterOptions
 ): Property[] {
   return properties.filter((property) => {
-    if (property.price < filters.priceRange[0] || property.price > filters.priceRange[1]) {
+    if (
+      property.price < filters.priceRange[0] ||
+      property.price > filters.priceRange[1]
+    ) {
       return false;
     }
-    if (filters.propertyTypes.length > 0 && !filters.propertyTypes.includes(property.type)) {
+    if (
+      filters.propertyTypes.length > 0 &&
+      !filters.propertyTypes.includes(property.type)
+    ) {
       return false;
     }
-    if (filters.gender.length > 0 && !filters.gender.includes(property.gender)) {
+    if (
+      filters.gender.length > 0 &&
+      !filters.gender.includes(property.gender)
+    ) {
       return false;
     }
     if (filters.amenities.length > 0) {
@@ -538,7 +574,10 @@ export function filterProperties(
         return false;
       }
     }
-    if (filters.availability.length > 0 && !filters.availability.includes(property.availability)) {
+    if (
+      filters.availability.length > 0 &&
+      !filters.availability.includes(property.availability)
+    ) {
       return false;
     }
     if (filters.rating > 0 && property.rating < filters.rating) {
