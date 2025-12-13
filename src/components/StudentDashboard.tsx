@@ -462,6 +462,69 @@ function Map({
   const markersRef = useRef<L.Marker[]>([]);
   const isInitializedRef = useRef(false);
   const popupRef = useRef<L.Popup | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+
+  useEffect(() => {
+    const handlePropertyDetailsOpen = () => setIsDetailsOpen(true);
+    const handlePropertyDetailsClose = () => setIsDetailsOpen(false);
+
+    // You can use a custom event or prop to detect when PropertyDetails opens
+    // For now, we'll use a simpler approach by checking the DOM
+    const checkDetailsOpen = () => {
+      const detailsModal = document.querySelector(".property-details-modal");
+      setIsDetailsOpen(!!detailsModal);
+    };
+
+    // Check periodically
+    const interval = setInterval(checkDetailsOpen, 100);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // DISABLE MAP INTERACTIONS when PropertyDetails is open
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    if (isDetailsOpen) {
+      // Disable all interactions
+      mapRef.current.dragging.disable();
+      mapRef.current.touchZoom.disable();
+      mapRef.current.doubleClickZoom.disable();
+      mapRef.current.scrollWheelZoom.disable();
+      mapRef.current.boxZoom.disable();
+      mapRef.current.keyboard.disable();
+
+      // Make map container inert
+      if (mapContainerRef.current) {
+        mapContainerRef.current.style.pointerEvents = "none";
+        mapContainerRef.current.style.touchAction = "none";
+      }
+
+      // Hide all popups
+      if (popupRef.current) {
+        popupRef.current.close();
+        popupRef.current = null;
+      }
+
+      // Hide controls
+      mapRef.current.getContainer().classList.add("map-disabled");
+    } else {
+      // Re-enable interactions
+      mapRef.current.dragging.enable();
+      mapRef.current.touchZoom.enable();
+      mapRef.current.doubleClickZoom.enable();
+      mapRef.current.scrollWheelZoom.enable();
+      mapRef.current.boxZoom.enable();
+      mapRef.current.keyboard.enable();
+
+      if (mapContainerRef.current) {
+        mapContainerRef.current.style.pointerEvents = "auto";
+        mapContainerRef.current.style.touchAction = "auto";
+      }
+
+      mapRef.current.getContainer().classList.remove("map-disabled");
+    }
+  }, [isDetailsOpen]);
 
   // Initialize map
   useEffect(() => {
@@ -968,12 +1031,12 @@ export default function StudentDashboard({
 
       {/* LAYER 2: Map/List Toggle & Filter Button */}
       {!selectedProperty && (
-      <MapListAndFilter
-        isMap={isMap}
-        onToggle={() => setIsMap(!isMap)}
-        onFilterClick={() => setIsFilterOpen(true)}
-      />
-    )}
+        <MapListAndFilter
+          isMap={isMap}
+          onToggle={() => setIsMap(!isMap)}
+          onFilterClick={() => setIsFilterOpen(true)}
+        />
+      )}
 
       {/* ===== MODALS COME FIRST (BEFORE MAP) ===== */}
       {/* This ensures they appear above the map in stacking context */}
