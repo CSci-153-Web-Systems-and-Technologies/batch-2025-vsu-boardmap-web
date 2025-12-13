@@ -41,8 +41,12 @@ function IconLogo() {
       className="grid-cols-[max-content] grid-rows-[max-content] inline-grid place-items-start relative shrink-0"
       data-name="Icon Logo"
     >
-      <div className="[grid-area:1_/_1] bg-[#4f6f52] ml-0 mt-0 rounded-[12px] size-[49.208px]" />
-      <Home />
+      {/* Remove the green background circle and use your logo instead */}
+      <img
+        src="/BoardMap_Logo.png"
+        alt="BoardMap Logo"
+        className="w-[50px] h-[50px] object-contain"
+      />
     </div>
   );
 }

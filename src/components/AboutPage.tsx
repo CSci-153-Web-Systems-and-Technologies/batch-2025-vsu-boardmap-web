@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion';
-import svgPaths from "../imports/svg-0x5486gjrj";
 
 function Home() {
   return (
@@ -15,9 +14,16 @@ function Home() {
 
 function IconLogo() {
   return (
-    <div className="grid-cols-[max-content] grid-rows-[max-content] inline-grid place-items-start relative shrink-0">
-      <div className="[grid-area:1_/_1] bg-[#4f6f52] ml-0 mt-0 rounded-[12px] size-[49.208px]" />
-      <Home />
+    <div
+      className="grid-cols-[max-content] grid-rows-[max-content] inline-grid place-items-start relative shrink-0"
+      data-name="Icon Logo"
+    >
+      {/* Remove the green background circle and use your logo instead */}
+      <img
+        src="/BoardMap_Logo_White.png"
+        alt="BoardMap Logo"
+        className="w-[50px] h-[50px] object-contain"
+      />
     </div>
   );
 }
@@ -43,7 +49,7 @@ export default function AboutPage({ onClose }: AboutPageProps) {
         <div className="sticky top-0 bg-[#597445] rounded-t-[20px] p-6 flex items-center justify-between z-10">
           <div className="flex items-center gap-3">
             <IconLogo />
-            <h2 className="font-['REM:SemiBold',sans-serif] text-[28px] md:text-[36px] text-white">About BoardMap</h2>
+            <h2 className="font-['REM:SemiBold',sans-serif] text-[28px] md:text-[36px] text-white">About Us</h2>
           </div>
           <button
             onClick={onClose}
