@@ -10,7 +10,8 @@ import { Menu, X } from "lucide-react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "../styles/global.css";
-import FilterModal from './FilterModal';
+import FilterModal from "./FilterModal";
+import PropertyDetails from "./PropertyDetails";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -449,69 +450,6 @@ function PropertyCard({
   );
 }
 
-function PropertyDetails({
-  property,
-  onClose,
-}: {
-  property: Property;
-  onClose: () => void;
-}) {
-  return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[10000] p-4 md:p-6">
-      <div className="bg-white rounded-[20px] max-w-4xl w-full max-h-[90vh] overflow-y-auto z-[10001] shadow-2xl">
-        <div className="p-6">
-          <div className="flex justify-between items-start mb-6">
-            <h2 className="text-2xl md:text-3xl font-bold text-[#4f6f52]">
-              {property.title}
-            </h2>
-            <button
-              onClick={onClose}
-              className="text-[#597445] hover:opacity-70 text-2xl"
-            >
-              ✕
-            </button>
-          </div>
-          <div className="grid md:grid-cols-2 gap-8">
-            <div>
-              <p className="text-3xl md:text-4xl font-bold text-[#79ac78] mb-6">
-                ₱{property.price.toLocaleString()}/month
-              </p>
-              <p className="text-[#597445] text-[16px] md:text-[17px] leading-relaxed mb-6">
-                {property.description}
-              </p>
-              <div className="mb-6">
-                <h3 className="font-semibold text-[18px] text-[#4f6f52] mb-3">
-                  Amenities
-                </h3>
-                <div className="flex flex-wrap gap-2.5">
-                  {property.amenities?.map((amenity, idx) => (
-                    <span
-                      key={idx}
-                      className="bg-[#e7f0dc] text-[#597445] px-4 py-2 rounded-full text-[14px] font-medium"
-                    >
-                      {amenity}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <div>
-              <div className="bg-gradient-to-br from-gray-100 to-gray-200 h-64 rounded-[20px] mb-6 flex items-center justify-center overflow-hidden">
-                <span className="text-gray-500 font-medium">
-                  Property Image
-                </span>
-              </div>
-              <button className="w-full bg-[#4f6f52] text-white py-4 rounded-[18px] font-semibold text-[16px] hover:bg-[#3d5841] transition-all duration-300 hover:shadow-lg">
-                Contact Owner
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 function Map({
   properties,
   onPropertyClick,
@@ -523,6 +461,7 @@ function Map({
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
   const isInitializedRef = useRef(false);
+  const popupRef = useRef<L.Popup | null>(null);
 
   // Initialize map
   useEffect(() => {
@@ -582,18 +521,6 @@ function Map({
       return;
     }
 
-    console.log("Updating markers with", properties.length, "properties");
-
-    // Clear existing markers
-    if (markersRef.current.length > 0) {
-      markersRef.current.forEach((marker) => {
-        if (marker && mapRef.current) {
-          marker.remove();
-        }
-      });
-      markersRef.current = [];
-    }
-
     // Create new markers
     const bounds = L.latLngBounds([]);
     const newMarkers: L.Marker[] = [];
@@ -627,51 +554,100 @@ function Map({
           popupAnchor: [0, -40],
         });
 
-        // Create marker
+        // Create marker WITHOUT auto-popup
         const marker = L.marker(
           [property.location.lat, property.location.lng],
           {
             icon: customIcon,
             title: property.title,
+            riseOnHover: true,
           }
         ).addTo(mapRef.current!);
 
-        // Add popup
-        marker.bindPopup(`
-          <div style="min-width: 200px; padding: 10px;">
-            <h3 style="margin: 0 0 8px 0; color: #4f6f52; font-size: 16px; font-weight: bold;">${
-              property.title
-            }</h3>
-            <p style="margin: 0 0 4px 0; color: #79ac78; font-weight: bold; font-size: 18px;">₱${property.price.toLocaleString()}/month</p>
-            <p style="margin: 0 0 4px 0; color: #666; font-size: 14px;">${
-              property.type
-            }</p>
-            <p style="margin: 0 0 8px 0; color: #666; font-size: 14px;">${
-              property.address || "No address provided"
-            }</p>
-            <button style="
-              background: #4f6f52;
-              color: white;
-              border: none;
-              padding: 8px 16px;
-              border-radius: 8px;
-              cursor: pointer;
-              font-size: 14px;
-              font-weight: bold;
-              margin-top: 8px;
-              width: 100%;
-            " onclick="window.dispatchEvent(new CustomEvent('propertyClick', { detail: '${
-              property.id
-            }' }))">
+        // Create popup for hover (not auto-open)
+        const popup = L.popup({
+          closeButton: true,
+          autoClose: false,
+          closeOnClick: false,
+          className: "property-hover-popup",
+          maxWidth: 250,
+          offset: [0, -20],
+        }).setContent(`
+          <div style="padding: 12px; min-width: 220px;">
+            <h3 style="margin: 0 0 6px 0; color: #4f6f52; font-size: 16px; font-weight: bold; line-height: 1.2;">
+              ${property.title}
+            </h3>
+            <p style="margin: 0 0 4px 0; color: #79ac78; font-weight: bold; font-size: 18px; line-height: 1.2;">
+              ₱${property.price.toLocaleString()}/month
+            </p>
+            <p style="margin: 0 0 4px 0; color: #666; font-size: 14px; line-height: 1.2;">
+              ${property.type}
+            </p>
+            <p style="margin: 0 0 8px 0; color: #666; font-size: 13px; line-height: 1.2;">
+              ${property.address || "Address not available"}
+            </p>
+            <button 
+              style="
+                background: #4f6f52;
+                color: white;
+                border: none;
+                padding: 8px 16px;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 14px;
+                font-weight: bold;
+                width: 100%;
+                transition: background-color 0.2s;
+              "
+              onmouseover="this.style.backgroundColor='#3d5841'"
+              onmouseout="this.style.backgroundColor='#4f6f52'"
+              onclick="window.dispatchEvent(new CustomEvent('propertyClick', { detail: '${
+                property.id
+              }' }))"
+            >
               View Details
             </button>
           </div>
         `);
 
-        // Add click handler
+        // HOVER EVENT: Show popup on mouseover
+        marker.on("mouseover", function (e) {
+          if (popupRef.current) {
+            popupRef.current.close();
+          }
+          popup.setLatLng(e.latlng);
+          popup.openOn(mapRef.current!);
+          popupRef.current = popup;
+        });
+
+        // MOUSEOUT EVENT: Close popup after delay
+        marker.on("mouseout", function () {
+          setTimeout(() => {
+            if (popupRef.current === popup) {
+              popup.close();
+              popupRef.current = null;
+            }
+          }, 300);
+        });
+
+        // CLICK EVENT: Open PropertyDetails modal
         marker.on("click", () => {
           console.log("Marker clicked:", property.title);
+          // Close any open popup
+          if (popupRef.current) {
+            popupRef.current.close();
+            popupRef.current = null;
+          }
+          // Trigger property click to open modal
           onPropertyClick(property);
+        });
+
+        // Also close popup when clicking elsewhere on map
+        mapRef.current.on("click", () => {
+          if (popupRef.current) {
+            popupRef.current.close();
+            popupRef.current = null;
+          }
         });
 
         newMarkers.push(marker);
@@ -723,42 +699,40 @@ function Map({
   return (
     <div className="w-full h-full relative rounded-[15px] overflow-hidden">
       <style>{`
-        /* Ensure map container has proper dimensions */
-        .leaflet-container {
-          width: 100%;
-          height: 100%;
-          border-radius: 15px;
-          z-index: 1;
-        }
-        
-        /* Custom marker styling */
-        .custom-marker {
-          background: transparent;
-          border: none;
-          z-index: 10;
-        }
-        
-        /* Ensure popups are visible */
-        .leaflet-popup-content-wrapper {
-          border-radius: 10px;
-          box-shadow: 0 3px 10px rgba(0,0,0,0.2);
-          z-index: 101;
-        }
-        
-        .leaflet-popup-content {
-          margin: 0;
-          z-index: 100;
-        }
-        
-        .leaflet-popup-tip {
-          background: white;
-        }
-        
-        /* Ensure map tiles load properly */
-        .leaflet-tile {
-          filter: none !important;
-        }
-      `}</style>
+  /* Ensure map container has proper dimensions */
+  .leaflet-container {
+    width: 100%;
+    height: 100%;
+    border-radius: 15px;
+    z-index: 1;
+  }
+  
+  /* Custom marker styling */
+  .custom-marker {
+    background: transparent;
+    border: none;
+    z-index: 1000;
+  }
+  
+  /* Ensure hover popups are above markers */
+  .leaflet-popup {
+    z-index: 1001 !important;
+  }
+  
+  /* PropertyDetails modal should be above everything */
+  .property-details-modal {
+    z-index: 999999 !important;
+  }
+  
+  /* Ensure map tiles are below everything */
+  .leaflet-tile {
+    z-index: 0 !important;
+  }
+  
+  .leaflet-control-container {
+    z-index: 1000 !important;
+  }
+`}</style>
 
       <div
         ref={mapContainerRef}
@@ -876,6 +850,18 @@ export default function StudentDashboard({
     setFilteredProperties(filtered);
   }, [allProperties, filters]);
 
+  useEffect(() => {
+    if (selectedProperty) {
+      document.body.classList.add("property-details-open");
+    } else {
+      document.body.classList.remove("property-details-open");
+    }
+
+    return () => {
+      document.body.classList.remove("property-details-open");
+    };
+  }, [selectedProperty]);
+
   async function loadProperties() {
     try {
       setLoading(true);
@@ -981,11 +967,13 @@ export default function StudentDashboard({
       />
 
       {/* LAYER 2: Map/List Toggle & Filter Button */}
+      {!selectedProperty && (
       <MapListAndFilter
         isMap={isMap}
         onToggle={() => setIsMap(!isMap)}
         onFilterClick={() => setIsFilterOpen(true)}
       />
+    )}
 
       {/* ===== MODALS COME FIRST (BEFORE MAP) ===== */}
       {/* This ensures they appear above the map in stacking context */}

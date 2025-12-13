@@ -1,5 +1,4 @@
 import { useState } from "react";
-import svgPaths from "../imports/svg-kdfhcdtos";
 import { FilterOptions } from "../utils/api";
 
 interface FilterModalProps {
@@ -9,29 +8,29 @@ interface FilterModalProps {
   onApply: (filters: FilterOptions) => void;
 }
 
-function X() {
-  return (
-    <div className="relative shrink-0 size-6 md:size-[30px]">
-      <svg
-        className="block size-full"
-        fill="none"
-        preserveAspectRatio="none"
-        viewBox="0 0 30 30"
-      >
-        <g id="X">
-          <path
-            d={svgPaths.p6985300}
-            id="Icon"
-            stroke="var(--stroke-0, #597445)"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="4"
-          />
-        </g>
-      </svg>
-    </div>
-  );
-}
+// function X() {
+//   return (
+//     <div className="relative shrink-0 size-6 md:size-[30px]">
+//       <svg
+//         className="block size-full"
+//         fill="none"
+//         preserveAspectRatio="none"
+//         viewBox="0 0 30 30"
+//       >
+//         <g id="X">
+//           <path
+//             d={svgPaths.p6985300}
+//             id="Icon"
+//             stroke="var(--stroke-0, #597445)"
+//             strokeLinecap="round"
+//             strokeLinejoin="round"
+//             strokeWidth="4"
+//           />
+//         </g>
+//       </svg>
+//     </div>
+//   );
+// }
 
 export default function FilterModal({
   isOpen,

@@ -1,4 +1,7 @@
-import { createClient as createSupabaseClient, SupabaseClient } from '@supabase/supabase-js';
+import {
+  createClient as createSupabaseClient,
+  SupabaseClient,
+} from "@supabase/supabase-js";
 import { projectId, publicAnonKey } from "./supabase/info";
 
 const supabaseUrl = `https://${projectId}.supabase.co`;
@@ -156,25 +159,27 @@ interface PropertyInsert {
   owner_email: string;
 }
 
-export async function createProperty(propertyData: Partial<Property>): Promise<Property> {
+export async function createProperty(
+  propertyData: Partial<Property>
+): Promise<Property> {
   try {
     console.log("Creating property with data:", propertyData);
-    
+
     // Ensure required fields are present - use title, not name
     const payload = {
-      title: propertyData.title,  // This should work now with updated interface
-      description: propertyData.description || '',
+      title: propertyData.title, // This should work now with updated interface
+      description: propertyData.description || "",
       price: Number(propertyData.price) || 0,
-      address: propertyData.address || '',
+      address: propertyData.address || "",
       location: propertyData.location || { lat: 10.6777, lng: 124.8009 },
-      type: propertyData.type || 'Studio',
-      gender: propertyData.gender || 'Any',
+      type: propertyData.type || "Studio",
+      gender: propertyData.gender || "Any",
       bedrooms: Number(propertyData.bedrooms) || 1,
       bathrooms: Number(propertyData.bathrooms) || 1,
       amenities: propertyData.amenities || [],
       images: propertyData.images || [],
-      availability: propertyData.availability || 'Available',
-      owner_phone: propertyData.owner_phone || '',
+      availability: propertyData.availability || "Available",
+      owner_phone: propertyData.owner_phone || "",
       owner_id: propertyData.owner_id,
       owner_name: propertyData.owner_name,
       owner_email: propertyData.owner_email,
@@ -183,21 +188,21 @@ export async function createProperty(propertyData: Partial<Property>): Promise<P
     console.log("Sending to Supabase:", payload);
 
     const { data, error } = await supabase
-      .from('properties')
+      .from("properties")
       .insert([payload])
       .select()
       .single();
 
     if (error) {
       console.error("Supabase error:", error);
-      throw new Error(error.message || 'Failed to create property');
+      throw new Error(error.message || "Failed to create property");
     }
 
     console.log("Property created successfully:", data);
     return data;
   } catch (error: any) {
-    console.error('Error creating property:', error);
-    throw new Error(error.message || 'Failed to create property');
+    console.error("Error creating property:", error);
+    throw new Error(error.message || "Failed to create property");
   }
 }
 

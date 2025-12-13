@@ -1,7 +1,23 @@
-import { useState, useEffect } from 'react';
-import { Property, Review, getPropertyReviews, createReview, createInquiry } from '../utils/api';
-import { X, MapPin, Star, Home, Users, Bath, Bed, Phone, MessageSquare } from 'lucide-react';
-import { toast } from 'sonner';
+import { useState, useEffect } from "react";
+import {
+  Property,
+  Review,
+  getPropertyReviews,
+  createReview,
+  createInquiry,
+} from "../utils/api";
+import {
+  X,
+  MapPin,
+  Star,
+  Home,
+  Users,
+  Bath,
+  Bed,
+  Phone,
+  MessageSquare,
+} from "lucide-react";
+import { toast } from "sonner";
 
 interface PropertyDetailsProps {
   property: Property;
@@ -9,15 +25,27 @@ interface PropertyDetailsProps {
   userName?: string;
   accessToken?: string;
   onClose: () => void;
-  onMessage?: (ownerId: string, ownerName: string, propertyId: string, propertyTitle: string) => void;
+  onMessage?: (
+    ownerId: string,
+    ownerName: string,
+    propertyId: string,
+    propertyTitle: string
+  ) => void;
 }
 
-export default function PropertyDetails({ property, userId, userName, accessToken, onClose, onMessage }: PropertyDetailsProps) {
+export default function PropertyDetails({
+  property,
+  userId,
+  userName,
+  accessToken,
+  onClose,
+  onMessage,
+}: PropertyDetailsProps) {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [rating, setRating] = useState(5);
-  const [comment, setComment] = useState('');
+  const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -29,7 +57,7 @@ export default function PropertyDetails({ property, userId, userName, accessToke
       const propertyReviews = await getPropertyReviews(property.id);
       setReviews(propertyReviews);
     } catch (error) {
-      console.error('Error loading reviews:', error);
+      console.error("Error loading reviews:", error);
     } finally {
       setLoading(false);
     }
@@ -39,27 +67,32 @@ export default function PropertyDetails({ property, userId, userName, accessToke
     if (property.ownerPhone) {
       window.location.href = `tel:${property.ownerPhone}`;
     } else {
-      toast.error('Phone number not available');
+      toast.error("Phone number not available");
     }
   };
 
   const handleMessage = () => {
     if (onMessage && userId) {
-      onMessage(property.ownerId, property.ownerName, property.id, property.title);
+      onMessage(
+        property.ownerId,
+        property.ownerName,
+        property.id,
+        property.title
+      );
       onClose();
     } else {
-      toast.error('Please sign in to send messages');
+      toast.error("Please sign in to send messages");
     }
   };
 
   const handleSubmitReview = async () => {
     if (!accessToken || !userId) {
-      toast.error('Please sign in to leave a review');
+      toast.error("Please sign in to leave a review");
       return;
     }
 
     if (comment.trim().length < 10) {
-      toast.error('Please write at least 10 characters');
+      toast.error("Please write at least 10 characters");
       return;
     }
 
@@ -73,14 +106,14 @@ export default function PropertyDetails({ property, userId, userName, accessToke
         },
         accessToken
       );
-      toast.success('Review submitted successfully!');
+      toast.success("Review submitted successfully!");
       setShowReviewForm(false);
-      setComment('');
+      setComment("");
       setRating(5);
       await loadReviews();
     } catch (error: any) {
-      console.error('Error submitting review:', error);
-      toast.error(error.message || 'Failed to submit review');
+      console.error("Error submitting review:", error);
+      toast.error(error.message || "Failed to submit review");
     } finally {
       setSubmitting(false);
     }
@@ -88,7 +121,7 @@ export default function PropertyDetails({ property, userId, userName, accessToke
 
   const handleInquire = async () => {
     if (!accessToken || !userId) {
-      toast.error('Please sign in to inquire');
+      toast.error("Please sign in to inquire");
       return;
     }
 
@@ -102,17 +135,20 @@ export default function PropertyDetails({ property, userId, userName, accessToke
         },
         accessToken
       );
-      toast.success('Inquiry sent to property owner!');
+      toast.success("Inquiry sent to property owner!");
     } catch (error: any) {
-      console.error('Error sending inquiry:', error);
-      toast.error(error.message || 'Failed to send inquiry');
+      console.error("Error sending inquiry:", error);
+      toast.error(error.message || "Failed to send inquiry");
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[200] p-4" onClick={onClose}>
-      <div 
-        className="bg-white rounded-[20px] max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+    <div
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999999] p-4 md:p-6"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-[20px] max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl z-[10000000]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -132,9 +168,13 @@ export default function PropertyDetails({ property, userId, userName, accessToke
         <div className="relative h-[250px] md:h-[400px] bg-gradient-to-br from-[#e7f0dc] to-[#d4e5c8] flex items-center justify-center">
           <Home size={64} className="text-[#597445]/30" />
           <div className="absolute top-4 right-4 bg-white/95 px-4 py-2 rounded-full">
-            <span className={`font-['Rethink_Sans:SemiBold',sans-serif] text-[14px] ${
-              property.availability === 'Available' ? 'text-[#79ac78]' : 'text-[#d97445]'
-            }`}>
+            <span
+              className={`font-['Rethink_Sans:SemiBold',sans-serif] text-[14px] ${
+                property.availability === "Available"
+                  ? "text-[#79ac78]"
+                  : "text-[#d97445]"
+              }`}
+            >
               {property.availability}
             </span>
           </div>
@@ -187,13 +227,13 @@ export default function PropertyDetails({ property, userId, userName, accessToke
             <div className="bg-[#e7f0dc] rounded-[12px] p-4 flex flex-col items-center gap-2">
               <Bed size={24} className="text-[#597445]" />
               <span className="font-['Rethink_Sans:SemiBold',sans-serif] text-[14px] md:text-[16px] text-[#4f6f52]">
-                {property.bedrooms} Bedroom{property.bedrooms > 1 ? 's' : ''}
+                {property.bedrooms} Bedroom{property.bedrooms > 1 ? "s" : ""}
               </span>
             </div>
             <div className="bg-[#e7f0dc] rounded-[12px] p-4 flex flex-col items-center gap-2">
               <Bath size={24} className="text-[#597445]" />
               <span className="font-['Rethink_Sans:SemiBold',sans-serif] text-[14px] md:text-[16px] text-[#4f6f52]">
-                {property.bathrooms} Bathroom{property.bathrooms > 1 ? 's' : ''}
+                {property.bathrooms} Bathroom{property.bathrooms > 1 ? "s" : ""}
               </span>
             </div>
             <div className="bg-[#e7f0dc] rounded-[12px] p-4 flex flex-col items-center gap-2">
@@ -218,7 +258,9 @@ export default function PropertyDetails({ property, userId, userName, accessToke
                     </h5>
                     <div className="space-y-1 text-[14px] text-[#597445]">
                       <p>Max Occupancy: {room.maxOccupancy} tenants</p>
-                      <p>Current: {room.currentOccupancy}/{room.maxOccupancy}</p>
+                      <p>
+                        Current: {room.currentOccupancy}/{room.maxOccupancy}
+                      </p>
                       <p className="font-['Rethink_Sans:SemiBold',sans-serif] text-[16px] text-[#79ac78]">
                         ₱{room.price.toLocaleString()}/month
                       </p>
@@ -332,8 +374,8 @@ export default function PropertyDetails({ property, userId, userName, accessToke
                             size={32}
                             className={`${
                               star <= rating
-                                ? 'text-[#fbbf24] fill-[#fbbf24]'
-                                : 'text-[#d1d5db]'
+                                ? "text-[#fbbf24] fill-[#fbbf24]"
+                                : "text-[#d1d5db]"
                             } transition-colors`}
                           />
                         </button>
@@ -356,7 +398,7 @@ export default function PropertyDetails({ property, userId, userName, accessToke
                     <button
                       onClick={() => {
                         setShowReviewForm(false);
-                        setComment('');
+                        setComment("");
                         setRating(5);
                       }}
                       disabled={submitting}
@@ -369,7 +411,7 @@ export default function PropertyDetails({ property, userId, userName, accessToke
                       disabled={submitting || comment.trim().length < 10}
                       className="flex-1 bg-[#597445] text-white rounded-[10px] py-2 hover:bg-[#4f6f52] transition-colors disabled:opacity-50"
                     >
-                      {submitting ? 'Submitting...' : 'Submit Review'}
+                      {submitting ? "Submitting..." : "Submit Review"}
                     </button>
                   </div>
                 </div>
@@ -388,7 +430,10 @@ export default function PropertyDetails({ property, userId, userName, accessToke
                 </p>
               ) : (
                 reviews.map((review) => (
-                  <div key={review.id} className="bg-[#e7f0dc] rounded-[12px] p-4">
+                  <div
+                    key={review.id}
+                    className="bg-[#e7f0dc] rounded-[12px] p-4"
+                  >
                     <div className="flex items-center justify-between mb-2">
                       <div>
                         <p className="font-['Rethink_Sans:SemiBold',sans-serif] text-[16px] text-[#4f6f52]">
@@ -405,8 +450,8 @@ export default function PropertyDetails({ property, userId, userName, accessToke
                             size={16}
                             className={`${
                               i < review.rating
-                                ? 'text-[#fbbf24] fill-[#fbbf24]'
-                                : 'text-[#d1d5db]'
+                                ? "text-[#fbbf24] fill-[#fbbf24]"
+                                : "text-[#d1d5db]"
                             }`}
                           />
                         ))}
