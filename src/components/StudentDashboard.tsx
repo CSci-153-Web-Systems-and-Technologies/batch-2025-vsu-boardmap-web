@@ -58,10 +58,16 @@ function HomeIcon() {
 
 function IconLogo() {
   return (
-    <div className="relative">
-      <div className="bg-white rounded-[12px] size-[49.208px] flex items-center justify-center">
-        <HomeIcon />
-      </div>
+    <div
+      className="grid-cols-[max-content] grid-rows-[max-content] inline-grid place-items-start relative shrink-0"
+      data-name="Icon Logo"
+    >
+      {/* Remove the green background circle and use your logo instead */}
+      <img
+        src="/BoardMap_Logo_White.png"
+        alt="BoardMap Logo"
+        className="w-[50px] h-[50px] object-contain"
+      />
     </div>
   );
 }

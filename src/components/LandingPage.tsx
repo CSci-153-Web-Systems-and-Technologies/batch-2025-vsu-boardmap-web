@@ -41,8 +41,12 @@ function IconLogo() {
       className="grid-cols-[max-content] grid-rows-[max-content] inline-grid place-items-start relative shrink-0"
       data-name="Icon Logo"
     >
-      <div className="[grid-area:1_/_1] bg-[#4f6f52] ml-0 mt-0 rounded-[12px] size-[49.208px]" />
-      <Home />
+      {/* Remove the green background circle and use your logo instead */}
+      <img
+        src="/BoardMap_Logo.png"
+        alt="BoardMap Logo"
+        className="w-[50px] h-[50px] object-contain"
+      />
     </div>
   );
 }
@@ -147,7 +151,7 @@ function AuthForm({ isSignUp, onSubmit, loading }: AuthFormProps) {
       exit={{ opacity: 0, y: -10 }}
       transition={{ duration: 0.3 }}
       onSubmit={handleSubmit}
-      className="contents"
+      className="contents w-full"
     >
       <AnimatePresence mode="wait">
         {isSignUp && (
@@ -156,7 +160,7 @@ function AuthForm({ isSignUp, onSubmit, loading }: AuthFormProps) {
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="content-stretch flex flex-col gap-[3px] items-start relative shrink-0 w-[384px] overflow-hidden"
+            className="content-stretch flex flex-col gap-[3px] items-start relative shrink-0 w-full max-w-[384px] overflow-hidden"
           >
             <div className="flex flex-col font-['Rethink_Sans:Medium',sans-serif] font-medium h-[22px] justify-center leading-[0] relative shrink-0 text-[#4f6f52] text-[14px] w-full">
               <p className="leading-[normal]">Full name</p>
@@ -168,14 +172,14 @@ function AuthForm({ isSignUp, onSubmit, loading }: AuthFormProps) {
                 setFormData({ ...formData, name: e.target.value })
               }
               placeholder="ex. Dela Cruz, Juan A."
-              className="bg-[#e7f0dc] h-[35px] w-full rounded-[15px] border border-[#597445] px-[23px] py-[6px] font-['Rethink_Sans:Regular',sans-serif] text-[12px] text-[#4f6f52] outline-none focus:ring-2 focus:ring-[#597445] transition-all"
+              className="bg-[#e7f0dc] h-[35px] w-full rounded-[15px] border border-[#597445] px-4 md:px-[23px] py-[6px] font-['Rethink_Sans:Regular',sans-serif] text-[12px] text-[#4f6f52] outline-none focus:ring-2 focus:ring-[#597445] transition-all"
               required={isSignUp}
             />
           </motion.div>
         )}
       </AnimatePresence>
 
-      <div className="content-stretch flex flex-col gap-[3px] items-start relative shrink-0 w-[384px]">
+      <div className="content-stretch flex flex-col gap-[3px] items-start relative shrink-0 w-full max-w-[384px]">
         <div className="flex flex-col font-['Rethink_Sans:Medium',sans-serif] font-medium h-[22px] justify-center leading-[0] relative shrink-0 text-[#4f6f52] text-[14px] w-full">
           <p className="leading-[normal]">Email</p>
         </div>
@@ -184,12 +188,12 @@ function AuthForm({ isSignUp, onSubmit, loading }: AuthFormProps) {
           value={formData.email}
           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
           placeholder="phone number, username, or email"
-          className="bg-[#e7f0dc] h-[35px] w-full rounded-[15px] border border-[#597445] px-[23px] py-[6px] font-['Rethink_Sans:Regular',sans-serif] text-[12px] text-[#4f6f52] outline-none focus:ring-2 focus:ring-[#597445] transition-all"
+          className="bg-[#e7f0dc] h-[35px] w-full rounded-[15px] border border-[#597445] px-4 md:px-[23px] py-[6px] font-['Rethink_Sans:Regular',sans-serif] text-[12px] text-[#4f6f52] outline-none focus:ring-2 focus:ring-[#597445] transition-all"
           required
         />
       </div>
 
-      <div className="content-stretch flex flex-col gap-[3px] items-start relative shrink-0 w-[384px]">
+      <div className="content-stretch flex flex-col gap-[3px] items-start relative shrink-0 w-full max-w-[384px]">
         <div className="flex flex-col font-['Rethink_Sans:Medium',sans-serif] font-medium h-[22px] justify-center leading-[0] relative shrink-0 text-[#4f6f52] text-[14px] w-full">
           <p className="leading-[normal]">Password</p>
         </div>
@@ -201,7 +205,7 @@ function AuthForm({ isSignUp, onSubmit, loading }: AuthFormProps) {
               setFormData({ ...formData, password: e.target.value })
             }
             placeholder={isSignUp ? "create secure password" : "enter password"}
-            className="bg-[#e7f0dc] h-[35px] w-full rounded-[15px] border border-[#597445] px-[23px] py-[6px] font-['Rethink_Sans:Regular',sans-serif] text-[12px] text-[#4f6f52] outline-none focus:ring-2 focus:ring-[#597445] transition-all pr-10"
+            className="bg-[#e7f0dc] h-[35px] w-full rounded-[15px] border border-[#597445] px-4 md:px-[23px] py-[6px] font-['Rethink_Sans:Regular',sans-serif] text-[12px] text-[#4f6f52] outline-none focus:ring-2 focus:ring-[#597445] transition-all pr-10"
             required
           />
           <button
@@ -251,8 +255,8 @@ function AuthForm({ isSignUp, onSubmit, loading }: AuthFormProps) {
         </div>
       </div>
 
-      {/* User Type Selection - Keep as is */}
-      <div className="content-stretch flex gap-[28px] items-center relative shrink-0">
+      {/* User Type Selection - Responsive */}
+      <div className="content-stretch flex flex-col sm:flex-row gap-4 sm:gap-[28px] items-center relative shrink-0 w-full justify-center">
         <div className="relative">
           <motion.div
             animate={{ opacity: formData.userType === "student" ? 1 : 0 }}
@@ -289,11 +293,11 @@ function AuthForm({ isSignUp, onSubmit, loading }: AuthFormProps) {
         </div>
       </div>
 
-      {/* Submit Button - Keep as is */}
+      {/* Submit Button - Responsive */}
       <button
         type="submit"
         disabled={loading}
-        className="bg-[#4f6f52] box-border content-stretch flex gap-[10px] h-[35px] items-center justify-center px-[44px] py-[8px] relative rounded-[15px] shrink-0 w-[180px] cursor-pointer hover:bg-[#3d5841] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        className="bg-[#4f6f52] box-border content-stretch flex gap-[10px] h-[35px] items-center justify-center px-[44px] py-[8px] relative rounded-[15px] shrink-0 w-full max-w-[180px] cursor-pointer hover:bg-[#3d5841] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <div className="flex flex-col font-['Rethink_Sans:Medium',sans-serif] font-medium justify-center leading-[0] relative shrink-0 text-[#e8f3da] text-[14px] text-center text-nowrap">
           <p className="leading-[normal] whitespace-pre">
@@ -410,17 +414,18 @@ function BodyRight({ onLogin }: BodyRightProps) {
 
       if (isSignUp) {
         // Sign up with proper metadata
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-          email: data.email,
-          password: data.password,
-          options: {
-            data: {
-              name: data.name || data.email.split("@")[0],
-              userType: data.userType,
-              type: data.userType // Add this for consistency
-            }
-          }
-        });
+        const { data: signUpData, error: signUpError } =
+          await supabase.auth.signUp({
+            email: data.email,
+            password: data.password,
+            options: {
+              data: {
+                name: data.name || data.email.split("@")[0],
+                userType: data.userType,
+                type: data.userType, // Add this for consistency
+              },
+            },
+          });
 
         if (signUpError) {
           toast.error(signUpError.message || "Failed to create account");
@@ -428,17 +433,20 @@ function BodyRight({ onLogin }: BodyRightProps) {
         }
 
         if (signUpData.user) {
-          toast.success("Account created successfully! Please check your email for verification.");
+          toast.success(
+            "Account created successfully! Please check your email for verification."
+          );
           // Don't auto-login after signup, wait for email verification
           setIsSignUp(false);
           return;
         }
       } else {
         // Sign in
-        const { data: authData, error } = await supabase.auth.signInWithPassword({
-          email: data.email,
-          password: data.password,
-        });
+        const { data: authData, error } =
+          await supabase.auth.signInWithPassword({
+            email: data.email,
+            password: data.password,
+          });
 
         if (error) {
           toast.error(error.message || "Invalid email or password");
@@ -446,9 +454,13 @@ function BodyRight({ onLogin }: BodyRightProps) {
         }
 
         if (authData.session && authData.user) {
-          const name = authData.user.user_metadata?.name || data.email.split("@")[0];
-          const userType = authData.user.user_metadata?.userType || authData.user.user_metadata?.type || data.userType;
-          
+          const name =
+            authData.user.user_metadata?.name || data.email.split("@")[0];
+          const userType =
+            authData.user.user_metadata?.userType ||
+            authData.user.user_metadata?.type ||
+            data.userType;
+
           onLogin(
             authData.user.id,
             name,
@@ -475,8 +487,8 @@ function BodyRight({ onLogin }: BodyRightProps) {
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
           queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
+            access_type: "offline",
+            prompt: "consent",
           },
         },
       });
@@ -613,7 +625,7 @@ export default function LandingPage({ onLogin }: LandingPageProps) {
 
   return (
     <div className="bg-gradient-to-b from-[#e2f0d1] to-[#ffffff] via-[#e8f3da] min-h-screen w-full overflow-x-hidden">
-      {/* Desktop Version */}
+      {/* Desktop Version - keep as is */}
       <div className="hidden lg:block">
         <div className="h-auto min-h-screen overflow-clip relative w-full">
           <div className="bg-[#e7f0dc] box-border content-start flex flex-wrap gap-[10px] h-[97.208px] items-start left-0 px-[25px] py-[24px] shadow-[0px_4px_100px_0px_rgba(35,74,28,0.3)] top-0 w-full">
@@ -623,10 +635,8 @@ export default function LandingPage({ onLogin }: LandingPageProps) {
             />
           </div>
           <div className="content-center flex flex-wrap gap-[100px] lg:gap-[200px] items-center justify-center px-8 py-16 w-full">
-            {/* Hero content here - using simplified version for mobile */}
             <div className="max-w-2xl">
               <h1 className="font-['REM:SemiBold',sans-serif] text-[48px] lg:text-[75px] leading-tight mb-6 whitespace-nowrap">
-                {" "}
                 <span className="block text-black font-semibold">
                   Find the Perfect
                 </span>
@@ -647,30 +657,50 @@ export default function LandingPage({ onLogin }: LandingPageProps) {
         </div>
       </div>
 
-      {/* Mobile/Tablet Version */}
+      {/* Mobile/Tablet Version - FIXED */}
       <div className="lg:hidden min-h-screen flex flex-col">
-        {/* <div className="bg-[#e7f0dc] shadow-[0px_4px_100px_0px_rgba(35,74,28,0.3)] px-4 py-4 sticky top-0 z-10"> */}
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
-          <LogoWithText />
-          <div className="flex gap-4">
-            <button
-              onClick={() => setShowAbout(true)}
-              className="font-['Rethink_Sans:SemiBold',sans-serif] text-[#4f6f52] text-[16px] hover:opacity-70 transition-opacity"
-            >
-              About
-            </button>
-            <button
-              onClick={() => setShowContact(true)}
-              className="font-['Rethink_Sans:SemiBold',sans-serif] text-[#4f6f52] text-[16px] hover:opacity-70 transition-opacity"
-            >
-              Contact
-            </button>
+        {/* Header with the same structure as desktop */}
+        <div className="bg-[#e7f0dc] shadow-[0px_4px_100px_0px_rgba(35,74,28,0.3)] px-4 py-4 w-full">
+          <div className="content-stretch flex items-center justify-between min-h-px min-w-px relative shrink-0 max-w-7xl mx-auto">
+            {/* LogoWithText component */}
+            <div className="relative shrink-0">
+              <div className="bg-clip-padding border-0 border-[transparent] border-solid box-border content-stretch flex items-center leading-[0] relative">
+                <div className="grid-cols-[max-content] grid-rows-[max-content] inline-grid place-items-start relative shrink-0">
+                  <img
+                    src="/BoardMap_Logo.png"
+                    alt="BoardMap Logo"
+                    className="w-[40px] h-[40px] object-contain"
+                  />
+                </div>
+                <div className="flex flex-col font-['REM:SemiBold',sans-serif] font-semibold h-[30px] justify-center relative shrink-0 text-[#4f6f52] text-[22px] text-center w-[120px]">
+                  <p className="leading-[normal]">BoardMap</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Navigation buttons - same as Frame12 but adjusted for mobile */}
+            <div className="relative shrink-0">
+              <div className="bg-clip-padding border-0 border-[transparent] border-solid box-border content-stretch flex font-['Rethink_Sans:SemiBold',sans-serif] font-semibold gap-[15px] items-center justify-center leading-[0] relative text-[#4f6f52] text-[16px] text-center">
+                <button
+                  onClick={() => setShowAbout(true)}
+                  className="flex flex-col h-[32px] justify-center relative shrink-0 w-[70px] cursor-pointer hover:opacity-80 transition-opacity"
+                >
+                  <p className="leading-[normal]">About</p>
+                </button>
+                <button
+                  onClick={() => setShowContact(true)}
+                  className="flex flex-col h-[32px] justify-center relative shrink-0 w-[70px] cursor-pointer hover:opacity-80 transition-opacity"
+                >
+                  <p className="leading-[normal]">Contact</p>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-        {/* </div> */}
 
-        <div className="flex-1 flex flex-col items-center px-4 py-8 gap-8">
-          <div className="text-center max-w-2xl">
+        {/* Main content - REMOVED the extra wrapper div */}
+        <div className="flex-1 flex flex-col items-center px-4 py-8 gap-8 w-full">
+          <div className="text-center max-w-2xl px-4">
             <h1 className="font-['REM:SemiBold',sans-serif] text-[32px] md:text-[48px] leading-tight mb-4">
               <span className="block text-black">Find the Perfect</span>
               <span className="block text-[#79ac78]">Boarding House</span>
@@ -682,7 +712,8 @@ export default function LandingPage({ onLogin }: LandingPageProps) {
             </p>
           </div>
 
-          <div className="bg-[#e7f0dc] rounded-[16px] border-4 border-[#597445] p-6 md:p-8 w-full max-w-md">
+          {/* Directly use BodyRight without extra wrapper */}
+          <div className="w-full flex justify-center px-4">
             <BodyRight onLogin={onLogin} />
           </div>
         </div>
