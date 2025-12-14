@@ -61,6 +61,32 @@ app.get('/', (c)=>{
     ]
   });
 });
+
+app.get('/debug/*', (c) => {
+  console.log('=== DEBUG ROUTE HIT ===');
+  console.log('Full URL:', c.req.url);
+  console.log('Path:', c.req.path);
+  console.log('Method:', c.req.method);
+  console.log('Headers:', Object.fromEntries(c.req.raw.headers.entries()));
+  
+  return c.json({
+    status: 'debug',
+    url: c.req.url,
+    path: c.req.path,
+    method: c.req.method,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Also add a simple test endpoint
+app.get('/test-messages', (c) => {
+  return c.json({
+    status: 'ok',
+    message: 'Messages endpoint is reachable',
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Sign up route
 app.post('/signup', async (c)=>{
   try {

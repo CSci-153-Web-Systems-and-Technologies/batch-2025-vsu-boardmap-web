@@ -204,6 +204,8 @@ export default function FilterModal({
                 "Comfort Room",
                 "Smoking Allowed",
                 "Pets Allowed",
+                "No Curfew",
+                "Visitors Allowed",
               ].map((amenity) => (
                 <button
                   key={amenity}

@@ -4,8 +4,7 @@ import {
   Review,
   getPropertyReviews,
   createReview,
-  createInquiry,
-} from "../utils/api";
+} from "../utils/api"; // Remove createInquiry import
 import {
   X,
   MapPin,
@@ -16,6 +15,8 @@ import {
   Bed,
   Phone,
   MessageSquare,
+  Mail,
+  User,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -56,6 +57,34 @@ export default function PropertyDetails({
     try {
       const propertyReviews = await getPropertyReviews(property.id);
       setReviews(propertyReviews);
+
+      // Calculate average rating
+      if (propertyReviews.length > 0) {
+        const totalRating = propertyReviews.reduce(
+          (sum, review) => sum + review.rating,
+          0
+        );
+        const averageRating = totalRating / propertyReviews.length;
+
+        // Round to nearest 0.5 with your specific rules
+        const roundedRating = Math.round(averageRating * 2) / 2;
+        const decimal = roundedRating - Math.floor(roundedRating);
+
+        let finalRating;
+        if (decimal === 0) {
+          finalRating = roundedRating;
+        } else if (decimal <= 0.2) {
+          finalRating = Math.floor(roundedRating);
+        } else if (decimal >= 0.8) {
+          finalRating = Math.ceil(roundedRating);
+        } else {
+          finalRating = Math.floor(roundedRating) + 0.5;
+        }
+
+        console.log(
+          `Rating calculation: Average=${averageRating}, Rounded=${roundedRating}, Final=${finalRating}`
+        );
+      }
     } catch (error) {
       console.error("Error loading reviews:", error);
     } finally {
@@ -64,25 +93,43 @@ export default function PropertyDetails({
   };
 
   const handleCall = () => {
-    if (property.ownerPhone) {
-      window.location.href = `tel:${property.ownerPhone}`;
+    // Use owner_phone instead of ownerPhone
+    if (property.owner_phone) {
+      window.location.href = `tel:${property.owner_phone}`;
     } else {
       toast.error("Phone number not available");
     }
   };
 
   const handleMessage = () => {
-    if (onMessage && userId) {
-      onMessage(
-        property.ownerId,
-        property.ownerName,
-        property.id,
-        property.title
-      );
-      onClose();
-    } else {
+    console.log("Message clicked - Debug info:", {
+      onMessageExists: !!onMessage,
+      userId,
+      accessToken,
+      ownerId: property.owner_id,
+      ownerName: property.owner_name,
+    });
+
+    // FIX: Check if user is logged in properly
+    if (!accessToken || !userId) {
       toast.error("Please sign in to send messages");
+      return;
     }
+
+    // FIX: Check if onMessage callback exists
+    if (!onMessage) {
+      toast.error("Messaging feature is not available");
+      return;
+    }
+
+    // FIX: Use correct property field names from your API
+    onMessage(
+      property.owner_id,          // Use owner_id not ownerId
+      property.owner_name || "Property Owner", // Use owner_name not ownerName
+      property.id,
+      property.title
+    );
+    onClose();
   };
 
   const handleSubmitReview = async () => {
@@ -119,28 +166,7 @@ export default function PropertyDetails({
     }
   };
 
-  const handleInquire = async () => {
-    if (!accessToken || !userId) {
-      toast.error("Please sign in to inquire");
-      return;
-    }
-
-    try {
-      await createInquiry(
-        {
-          propertyId: property.id,
-          propertyTitle: property.title,
-          ownerId: property.ownerId,
-          message: `I'm interested in ${property.title}. Is it still available?`,
-        },
-        accessToken
-      );
-      toast.success("Inquiry sent to property owner!");
-    } catch (error: any) {
-      console.error("Error sending inquiry:", error);
-      toast.error(error.message || "Failed to send inquiry");
-    }
-  };
+  // REMOVED: handleInquire function since it's redundant with Message
 
   return (
     <div
@@ -276,9 +302,16 @@ export default function PropertyDetails({
             <h4 className="font-['Rethink_Sans:SemiBold',sans-serif] text-[20px] md:text-[24px] text-[#4f6f52] mb-3">
               Description
             </h4>
-            <p className="font-['Rethink_Sans:Regular',sans-serif] text-[14px] md:text-[16px] text-[#597445] leading-relaxed">
-              {property.description}
-            </p>
+            <div className="font-['Rethink_Sans:Regular',sans-serif] text-[14px] md:text-[16px] text-[#597445] leading-relaxed">
+              {property.description.split("\n").map((line, index) => (
+                <span key={index}>
+                  {line}
+                  {index < property.description.split("\n").length - 1 && (
+                    <br />
+                  )}
+                </span>
+              ))}
+            </div>
           </div>
 
           {/* Amenities */}
@@ -298,32 +331,47 @@ export default function PropertyDetails({
             </div>
           </div>
 
-          {/* Owner Contact */}
+          {/* Owner Contact - UPDATED SECTION */}
           <div className="bg-[#e7f0dc] rounded-[15px] p-4 md:p-6">
             <h4 className="font-['Rethink_Sans:SemiBold',sans-serif] text-[20px] md:text-[24px] text-[#4f6f52] mb-3">
               Contact Owner
             </h4>
-            <div className="space-y-2 mb-4">
-              <p className="font-['Rethink_Sans:Medium',sans-serif] text-[16px] md:text-[18px] text-[#4f6f52]">
-                {property.ownerName}
-              </p>
-              <p className="font-['Rethink_Sans:Regular',sans-serif] text-[14px] md:text-[16px] text-[#597445]">
-                {property.ownerEmail}
-              </p>
-              {property.ownerPhone && (
-                <p className="font-['Rethink_Sans:Regular',sans-serif] text-[14px] md:text-[16px] text-[#597445]">
-                  {property.ownerPhone}
+            
+            {/* Owner Info - Added icons for better UX */}
+            <div className="space-y-3 mb-4">
+              <div className="flex items-center gap-3">
+                <User size={18} className="text-[#597445]" />
+                <p className="font-['Rethink_Sans:Medium',sans-serif] text-[16px] md:text-[18px] text-[#4f6f52]">
+                  {property.owner_name || "Property Owner"}
                 </p>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                <Mail size={18} className="text-[#597445]" />
+                <p className="font-['Rethink_Sans:Regular',sans-serif] text-[14px] md:text-[16px] text-[#597445]">
+                  {property.owner_email}
+                </p>
+              </div>
+              
+              {property.owner_phone && (
+                <div className="flex items-center gap-3">
+                  <Phone size={18} className="text-[#597445]" />
+                  <p className="font-['Rethink_Sans:Regular',sans-serif] text-[14px] md:text-[16px] text-[#597445]">
+                    {property.owner_phone}
+                  </p>
+                </div>
               )}
             </div>
+            
+            {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3">
-              {property.ownerPhone && (
+              {property.owner_phone && (
                 <button
                   onClick={handleCall}
                   className="flex-1 bg-[#79ac78] hover:bg-[#6b9b69] text-white rounded-[12px] py-3 px-4 font-['Rethink_Sans:SemiBold',sans-serif] text-[16px] transition-colors flex items-center justify-center gap-2"
                 >
                   <Phone size={20} />
-                  Call
+                  Call Owner
                 </button>
               )}
               <button
@@ -331,9 +379,16 @@ export default function PropertyDetails({
                 className="flex-1 bg-[#597445] hover:bg-[#4f6f52] text-white rounded-[12px] py-3 px-4 font-['Rethink_Sans:SemiBold',sans-serif] text-[16px] transition-colors flex items-center justify-center gap-2"
               >
                 <MessageSquare size={20} />
-                Message
+                Message Owner
               </button>
             </div>
+            
+            {/* Login reminder for non-logged in users */}
+            {!accessToken && (
+              <p className="mt-3 text-center text-sm text-[#d97445] font-['Rethink_Sans:Medium',sans-serif]">
+                Sign in to send messages to the owner
+              </p>
+            )}
           </div>
 
           {/* Reviews Section */}
@@ -466,15 +521,7 @@ export default function PropertyDetails({
             </div>
           </div>
 
-          {/* Inquire Button */}
-          {accessToken && (
-            <button
-              onClick={handleInquire}
-              className="w-full bg-[#79ac78] hover:bg-[#6b9b69] text-white rounded-[15px] py-4 font-['Rethink_Sans:SemiBold',sans-serif] text-[16px] md:text-[18px] transition-colors"
-            >
-              Send Inquiry to Owner
-            </button>
-          )}
+          {/* REMOVED: Send Inquiry to Owner button (redundant with Message) */}
         </div>
       </div>
     </div>
