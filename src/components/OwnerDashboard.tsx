@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { createClient } from '../utils/supabase/client';
+import { createClient } from "../utils/supabase/client";
 import PropertyForm from "./PropertyForm";
 import { Menu, X, Trash2, Edit2 } from "lucide-react";
 import { toast } from "sonner";
@@ -13,6 +13,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "./ui/alert-dialog";
+import PropertyDetails from "./PropertyDetails";
+import MessagingPage from "./MessagingPage";
 
 // TypeScript Interfaces - Match your actual database schema
 interface Property {
@@ -33,6 +35,10 @@ interface Property {
   amenities?: string[];
   type?: string;
   images?: string[];
+  rating?: number;
+  owner_name?: string;
+  owner_email?: string;
+  owner_phone?: string;
 }
 
 interface Occupant {
@@ -63,6 +69,7 @@ interface Inquiry {
   status: string;
   owner_id: string;
   created_at: string;
+  student_id?: string;
 }
 
 // Helper function to get field with fallback
@@ -71,48 +78,55 @@ const getField = <T,>(obj: any, field1: string, field2: string): T => {
 };
 
 // API Functions with proper typing
-const deleteProperty = async (id: string, accessToken: string): Promise<void> => {
+const deleteProperty = async (
+  id: string,
+  accessToken: string
+): Promise<void> => {
   const supabase = createClient();
-  const { error } = await supabase
-    .from('properties')
-    .delete()
-    .eq('id', id);
-  
+  const { error } = await supabase.from("properties").delete().eq("id", id);
+
   if (error) throw error;
 };
 
-const deleteOccupant = async (id: string, accessToken: string): Promise<void> => {
+const deleteOccupant = async (
+  id: string,
+  accessToken: string
+): Promise<void> => {
   const supabase = createClient();
-  const { error } = await supabase
-    .from('occupants')
-    .delete()
-    .eq('id', id);
-  
+  const { error } = await supabase.from("occupants").delete().eq("id", id);
+
   if (error) throw error;
 };
 
-type OccupantUpdate = Partial<Pick<Occupant, 'status' | 'monthly_rent' | 'paid_until' | 'room_number'>>;
-const updateOccupant = async (id: string, updates: OccupantUpdate): Promise<void> => {
+type OccupantUpdate = Partial<
+  Pick<Occupant, "status" | "monthly_rent" | "paid_until" | "room_number">
+>;
+const updateOccupant = async (
+  id: string,
+  updates: OccupantUpdate
+): Promise<void> => {
   const supabase = createClient();
   const { error } = await supabase
-    .from('occupants')
+    .from("occupants")
     .update(updates)
-    .eq('id', id);
-  
+    .eq("id", id);
+
   if (error) throw error;
 };
 
-type InquiryUpdate = Partial<Pick<Inquiry, 'status'>>;
-const updateInquiry = async (id: string, updates: InquiryUpdate): Promise<void> => {
+type InquiryUpdate = Partial<Pick<Inquiry, "status">>;
+const updateInquiry = async (
+  id: string,
+  updates: InquiryUpdate
+): Promise<void> => {
   const supabase = createClient();
   const { error } = await supabase
-    .from('inquiries')
+    .from("inquiries")
     .update(updates)
-    .eq('id', id);
-  
+    .eq("id", id);
+
   if (error) throw error;
 };
-
 
 function IconLogo() {
   return (
@@ -148,7 +162,6 @@ function MessageCircle() {
     </div>
   );
 }
-
 
 function Messages({ onClick }: { onClick: () => void }) {
   return (
@@ -213,7 +226,9 @@ interface HeaderProps {
 
 function Header({ user, onLogout, onMessagesClick, onMenuClick }: HeaderProps) {
   return (
-    <div className="fixed top-0 left-0 right-0 bg-[#597445] box-border content-start flex flex-wrap gap-2 md:gap-[10px] h-[70px] md:h-[100px] items-center px-4 md:px-[50px] py-3 md:py-[25px] z-30"> {/* Changed from z-50 to z-30 */}
+    <div className="fixed top-0 left-0 right-0 bg-[#597445] box-border content-start flex flex-wrap gap-2 md:gap-[10px] h-[70px] md:h-[100px] items-center px-4 md:px-[50px] py-3 md:py-[25px] z-30">
+      {" "}
+      {/* Changed from z-50 to z-30 */}
       <div
         aria-hidden="true"
         className="absolute border border-[#597445] border-solid inset-0 pointer-events-none shadow-[0px_4px_100px_0px_rgba(35,74,28,0.3)]"
@@ -336,21 +351,21 @@ function MobileMenu({
   );
 }
 
-
 interface OwnerDashboardProps {
-  user: {
-    id: string;
-    name: string;
-    email: string;
-    type: "student" | "owner";
-    accessToken: string;
-  };
+  user: User;
   onLogout: () => void;
+  onOpenMessaging: (
+    recipientId: string,
+    recipientName: string,
+    propertyId?: string,
+    propertyTitle?: string
+  ) => void;
 }
 
 export default function OwnerDashboard({
   user,
   onLogout,
+  onOpenMessaging,
 }: OwnerDashboardProps) {
   const [currentTab, setCurrentTab] = useState<
     "analytics" | "properties" | "occupants" | "inquiries"
@@ -373,6 +388,11 @@ export default function OwnerDashboard({
     id: string;
   } | null>(null);
 
+  // Add state for PropertyDetails
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(
+    null
+  );
+
   const fetchData = async () => {
     setIsLoading(true);
     try {
@@ -380,63 +400,76 @@ export default function OwnerDashboard({
 
       // Fetch properties
       const { data: properties, error: propertiesError } = await supabase
-        .from('properties')
-        .select('*')
-        .eq('owner_id', user.id)
-        .order('created_at', { ascending: false });
+        .from("properties")
+        .select("*")
+        .eq("owner_id", user.id)
+        .order("created_at", { ascending: false });
 
       // Ensure description is always a string, not undefined
-      const propertiesWithDefaults = ((properties as any[]) || []).map((p: any) => ({
-        ...p,
-        description: p.description || ''
-      }));
+      const propertiesWithDefaults = ((properties as any[]) || []).map(
+        (p: any) => ({
+          ...p,
+          description: p.description || "",
+        })
+      );
 
       setProperties(propertiesWithDefaults || []);
 
       // Try to fetch occupants (with error handling)
       try {
         const { data: occupants, error: occupantsError } = await supabase
-          .from('occupants')
-          .select('*')
-          .eq('owner_id', user.id)
-          .order('created_at', { ascending: false });
-        
+          .from("occupants")
+          .select("*")
+          .eq("owner_id", user.id)
+          .order("created_at", { ascending: false });
+
         if (occupantsError) {
-          console.warn('Occupants table might not exist:', occupantsError.message);
+          console.warn(
+            "Occupants table might not exist:",
+            occupantsError.message
+          );
           setOccupants([]); // Set empty array if table doesn't exist
         } else {
           setOccupants(occupants || []);
         }
       } catch (err) {
-        console.warn('Error fetching occupants:', err);
+        console.warn("Error fetching occupants:", err);
         setOccupants([]);
       }
 
-      // Try to fetch inquiries (with error handling)
+      // **CRITICAL FIX: Fetch ALL inquiries (not just active)**
       try {
-        const { data: inquiries, error: inquiriesError } = await supabase
-          .from('inquiries')
-          .select('*')
-          .eq('owner_id', user.id);
-        
+        console.log("📋 Fetching ALL inquiries for owner:", user.id);
+
+        const { data: allInquiries, error: inquiriesError } = await supabase
+          .from("inquiries")
+          .select("*")
+          .eq("owner_id", user.id)
+          .order("created_at", { ascending: false });
+
         if (inquiriesError) {
-          console.warn('Inquiries table might not exist:', inquiriesError.message);
-          setInquiries([]); // Set empty array if table doesn't exist
+          console.error("❌ Error fetching inquiries:", inquiriesError.message);
+          setInquiries([]);
         } else {
-          // Use the correct field name for status
-          const activeInquiries = (inquiries || []).filter(i => 
-            i.status === 'active' || (i as any).status === 'active'
-          );
-          setInquiries(activeInquiries);
+          console.log(`✅ Found ${allInquiries?.length || 0} TOTAL inquiries`);
+
+          // **IMPORTANT: Display ALL inquiries, not just active ones**
+          // Active will show as normal, archived will be filtered in UI if needed
+          setInquiries(allInquiries || []);
+
+          // Debug: Log the inquiries to see their structure
+          if (allInquiries && allInquiries.length > 0) {
+            console.log("📝 Sample inquiry:", allInquiries[0]);
+            console.log("📝 Inquiry status:", allInquiries[0].status);
+          }
         }
       } catch (err) {
-        console.warn('Error fetching inquiries:', err);
+        console.error("❌ Error fetching inquiries:", err);
         setInquiries([]);
       }
-
     } catch (error) {
-      console.error('Error fetching data:', error);
-      toast.error('Failed to load dashboard data');
+      console.error("Error fetching data:", error);
+      toast.error("Failed to load dashboard data");
     } finally {
       setIsLoading(false);
     }
@@ -445,15 +478,15 @@ export default function OwnerDashboard({
   // Fetch data on mount
   useEffect(() => {
     let isMounted = true;
-    
+
     const loadData = async () => {
       if (isMounted) {
         await fetchData();
       }
     };
-    
+
     loadData();
-    
+
     return () => {
       isMounted = false;
     };
@@ -503,10 +536,7 @@ export default function OwnerDashboard({
   const handleToggleOccupantStatus = async (occupant: Occupant) => {
     try {
       const newStatus = occupant.status === "active" ? "inactive" : "active";
-      await updateOccupant(
-        occupant.id,
-        { status: newStatus }
-      );
+      await updateOccupant(occupant.id, { status: newStatus });
       toast.success(`Occupant status changed to ${newStatus}`);
       await fetchData();
     } catch (error) {
@@ -518,6 +548,7 @@ export default function OwnerDashboard({
   const handleArchiveInquiry = async (id: string) => {
     try {
       await updateInquiry(id, { status: "archived" });
+      toast.success("Inquiry archived");
       await fetchData();
     } catch (error) {
       console.error("Error archiving inquiry:", error);
@@ -525,16 +556,42 @@ export default function OwnerDashboard({
     }
   };
 
+  // Update handleReplyToInquiry to use onOpenMessaging
   const handleReplyToInquiry = (inquiry: Inquiry) => {
-    setCurrentPage("messages");
-    const studentName = getField<string>(inquiry, 'student_name', 'studentName');
-    toast.info(`Opening messages with ${studentName}`);
+    const studentName = getField<string>(
+      inquiry,
+      "student_name",
+      "studentName"
+    );
+    const propertyTitle = getField<string>(
+      inquiry,
+      "property_title",
+      "propertyTitle"
+    );
+    const studentId = getField<string>(inquiry, "student_id", "studentId");
+
+    if (studentId) {
+      // Use the onOpenMessaging prop to open messaging
+      onOpenMessaging(
+        studentId,
+        studentName || "Student",
+        inquiry.property_id || inquiry.propertyId,
+        propertyTitle
+      );
+    } else {
+      toast.error("Cannot send message: Student ID not available");
+    }
   };
 
   const handlePropertyFormSave = async () => {
     setIsPropertyFormOpen(false);
     setEditingProperty(undefined);
     await fetchData();
+  };
+
+  // Update handlePropertyClick to open PropertyDetails
+  const handlePropertyClick = (property: Property) => {
+    setSelectedProperty(property);
   };
 
   // Calculate stats with proper field access
@@ -544,9 +601,37 @@ export default function OwnerDashboard({
   const totalRevenue = occupants
     .filter((o) => o.status === "active")
     .reduce((sum, o) => {
-      const rent = getField<number>(o, 'monthly_rent', 'monthlyRent') || 0;
+      const rent = getField<number>(o, "monthly_rent", "monthlyRent") || 0;
       return sum + rent;
     }, 0);
+
+  // Add this function to handle inquiry reply via messaging
+  const handleReplyViaMessaging = (inquiry: Inquiry) => {
+    const studentName = getField<string>(
+      inquiry,
+      "student_name",
+      "studentName"
+    );
+    const propertyTitle = getField<string>(
+      inquiry,
+      "property_title",
+      "propertyTitle"
+    );
+    const studentId = getField<string>(inquiry, "student_id", "studentId");
+
+    if (studentId) {
+      onOpenMessaging(
+        studentId,
+        studentName || "Student",
+        inquiry.property_id || inquiry.propertyId,
+        propertyTitle
+      );
+    } else {
+      toast.error("Cannot send message: Student ID not available");
+    }
+  };
+
+  // ... [Rest of your existing code remains the same until the properties map section]
 
   if (currentPage === "messages") {
     return (
@@ -581,15 +666,12 @@ export default function OwnerDashboard({
             </span>
           </button>
 
-          <h1 className="font-['REM:Bold',sans-serif] text-[32px] md:text-[42px] text-[#4f6f52] mb-8">
-            Messages
-          </h1>
-
-          <div className="bg-white rounded-[20px] shadow-[0px_0px_20px_0px_rgba(89,116,69,0.2)] p-6 md:p-8">
-            <p className="font-['Rethink_Sans:Regular',sans-serif] text-[18px] text-[#597445] text-center">
-              No messages yet. Your inquiries from students will appear here.
-            </p>
-          </div>
+          <MessagingPage
+            userId={user.id}
+            accessToken={user.accessToken}
+            onBack={() => setCurrentPage("dashboard")}
+            mode="list" // This shows ALL conversations for the owner
+          />
         </div>
 
         <MobileMenu
@@ -805,7 +887,9 @@ export default function OwnerDashboard({
                     // Group occupants by property
                     properties.map((property) => {
                       const propertyOccupants = occupants.filter(
-                        (o) => getField<string>(o, 'property_id', 'propertyId') === property.id
+                        (o) =>
+                          getField<string>(o, "property_id", "propertyId") ===
+                          property.id
                       );
                       if (propertyOccupants.length === 0) return null;
 
@@ -815,9 +899,22 @@ export default function OwnerDashboard({
                             {property.title}
                           </h3>
                           {propertyOccupants.map((occupant) => {
-                            const roomNumber = getField<string>(occupant, 'room_number', 'roomNumber');
-                            const monthlyRent = getField<number>(occupant, 'monthly_rent', 'monthlyRent') || 0;
-                            const paidUntil = getField<string>(occupant, 'paid_until', 'paidUntil');
+                            const roomNumber = getField<string>(
+                              occupant,
+                              "room_number",
+                              "roomNumber"
+                            );
+                            const monthlyRent =
+                              getField<number>(
+                                occupant,
+                                "monthly_rent",
+                                "monthlyRent"
+                              ) || 0;
+                            const paidUntil = getField<string>(
+                              occupant,
+                              "paid_until",
+                              "paidUntil"
+                            );
 
                             return (
                               <div
@@ -843,11 +940,15 @@ export default function OwnerDashboard({
                                       </p>
                                       <p className="font-['Rethink_Sans:Regular',sans-serif] text-[12px] md:text-[14px] text-[#79ac78]">
                                         Paid until:{" "}
-                                        {paidUntil ? new Date(paidUntil).toLocaleDateString("en-US", {
-                                          year: "numeric",
-                                          month: "short",
-                                          day: "numeric",
-                                        }) : 'Not set'}
+                                        {paidUntil
+                                          ? new Date(
+                                              paidUntil
+                                            ).toLocaleDateString("en-US", {
+                                              year: "numeric",
+                                              month: "short",
+                                              day: "numeric",
+                                            })
+                                          : "Not set"}
                                       </p>
                                     </div>
                                   </div>
@@ -903,70 +1004,194 @@ export default function OwnerDashboard({
                       <p className="font-['Rethink_Sans:Regular',sans-serif] text-[14px] md:text-[16px] text-[rgba(0,0,0,0.6)]">
                         Student inquiries about your properties will appear here
                       </p>
+                      {/* DEBUG INFO */}
+                      <div className="mt-4 p-4 bg-yellow-50 rounded-lg">
+                        <p className="text-sm text-yellow-800">
+                          <strong>Debug Info:</strong> Owner ID: {user.id}
+                        </p>
+                        <p className="text-sm text-yellow-800">
+                          Check if inquiries exist in Supabase table for this
+                          owner.
+                        </p>
+                      </div>
                     </div>
                   ) : (
-                    inquiries.map((inquiry) => {
-                      const studentName = getField<string>(inquiry, 'student_name', 'studentName');
-                      const propertyTitle = getField<string>(inquiry, 'property_title', 'propertyTitle');
+                    <div className="space-y-4">
+                      {/* Active Inquiries */}
+                      {inquiries.filter((i) => i.status === "active").length >
+                        0 && (
+                        <>
+                          <h3 className="font-['Rethink_Sans:SemiBold',sans-serif] text-[18px] md:text-[22px] text-[#4f6f52]">
+                            Active Inquiries (
+                            {
+                              inquiries.filter((i) => i.status === "active")
+                                .length
+                            }
+                            )
+                          </h3>
+                          {inquiries
+                            .filter((i) => i.status === "active")
+                            .map((inquiry) => {
+                              const studentName = getField<string>(
+                                inquiry,
+                                "student_name",
+                                "studentName"
+                              );
+                              const propertyTitle = getField<string>(
+                                inquiry,
+                                "property_title",
+                                "propertyTitle"
+                              );
 
-                      return (
-                        <div
-                          key={inquiry.id}
-                          className="bg-[#e7f0dc] border-2 border-[#597445] rounded-[15px] p-4 md:p-6"
-                        >
-                          <div className="flex justify-between items-start flex-wrap gap-4">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-3 mb-2">
-                                <div className="bg-[#597445] text-white rounded-full w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-[16px] md:text-[18px] font-['Rethink_Sans:Bold',sans-serif]">
-                                  {studentName
-                                    .split(" ")
-                                    .map((n) => n[0])
-                                    .join("")
-                                    .substring(0, 2)
-                                    .toUpperCase()}
+                              return (
+                                <div
+                                  key={inquiry.id}
+                                  className="bg-[#e7f0dc] border-2 border-[#597445] rounded-[15px] p-4 md:p-6"
+                                >
+                                  <div className="flex justify-between items-start flex-wrap gap-4">
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-3 mb-2">
+                                        <div className="bg-[#597445] text-white rounded-full w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-[16px] md:text-[18px] font-['Rethink_Sans:Bold',sans-serif]">
+                                          {studentName
+                                            .split(" ")
+                                            .map((n) => n[0])
+                                            .join("")
+                                            .substring(0, 2)
+                                            .toUpperCase()}
+                                        </div>
+                                        <div>
+                                          <h3 className="font-['Rethink_Sans:Bold',sans-serif] text-[16px] md:text-[20px] text-[#4f6f52]">
+                                            {studentName}
+                                          </h3>
+                                          <p className="font-['Rethink_Sans:Regular',sans-serif] text-[12px] md:text-[14px] text-[#597445]">
+                                            {new Date(
+                                              inquiry.created_at
+                                            ).toLocaleString("en-US", {
+                                              month: "short",
+                                              day: "numeric",
+                                              hour: "2-digit",
+                                              minute: "2-digit",
+                                            })}
+                                          </p>
+                                        </div>
+                                      </div>
+                                      <p className="font-['Rethink_Sans:Regular',sans-serif] text-[14px] md:text-[16px] text-[#597445] mb-2">
+                                        "{inquiry.message}"
+                                      </p>
+                                      <p className="font-['Rethink_Sans:Medium',sans-serif] text-[12px] md:text-[14px] text-[#79ac78]">
+                                        Property: {propertyTitle}
+                                      </p>
+                                    </div>
+                                    <div className="flex gap-2 flex-wrap">
+                                      <button
+                                        onClick={() =>
+                                          handleReplyToInquiry(inquiry)
+                                        }
+                                        className="bg-[#597445] text-white px-4 py-2 rounded-[10px] hover:bg-[#4f6f52] transition-all hover:shadow-lg active:scale-95 cursor-pointer text-[14px]"
+                                      >
+                                        Reply
+                                      </button>
+                                      <button
+                                        onClick={() =>
+                                          handleArchiveInquiry(inquiry.id)
+                                        }
+                                        className="bg-white text-[#597445] border-2 border-[#597445] px-4 py-2 rounded-[10px] hover:bg-[#f5f5f5] transition-all hover:shadow-md active:scale-95 cursor-pointer text-[14px]"
+                                      >
+                                        Archive
+                                      </button>
+                                    </div>
+                                  </div>
                                 </div>
-                                <div>
-                                  <h3 className="font-['Rethink_Sans:Bold',sans-serif] text-[16px] md:text-[20px] text-[#4f6f52]">
-                                    {studentName}
-                                  </h3>
-                                  <p className="font-['Rethink_Sans:Regular',sans-serif] text-[12px] md:text-[14px] text-[#597445]">
-                                    {new Date(inquiry.created_at).toLocaleString(
-                                      "en-US",
-                                      {
-                                        month: "short",
-                                        day: "numeric",
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                      }
-                                    )}
-                                  </p>
+                              );
+                            })}
+                        </>
+                      )}
+
+                      {/* Archived Inquiries */}
+                      {inquiries.filter((i) => i.status === "archived").length >
+                        0 && (
+                        <>
+                          <h3 className="font-['Rethink_Sans:SemiBold',sans-serif] text-[18px] md:text-[22px] text-[#4f6f52] mt-8">
+                            Archived Inquiries (
+                            {
+                              inquiries.filter((i) => i.status === "archived")
+                                .length
+                            }
+                            )
+                          </h3>
+                          {inquiries
+                            .filter((i) => i.status === "archived")
+                            .map((inquiry) => {
+                              const studentName = getField<string>(
+                                inquiry,
+                                "student_name",
+                                "studentName"
+                              );
+                              const propertyTitle = getField<string>(
+                                inquiry,
+                                "property_title",
+                                "propertyTitle"
+                              );
+
+                              return (
+                                <div
+                                  key={inquiry.id}
+                                  className="bg-gray-100 border-2 border-gray-300 rounded-[15px] p-4 md:p-6 opacity-70"
+                                >
+                                  <div className="flex justify-between items-start flex-wrap gap-4">
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-3 mb-2">
+                                        <div className="bg-gray-400 text-white rounded-full w-10 h-10 md:w-12 md:h-12 flex items-center justify-center text-[16px] md:text-[18px] font-['Rethink_Sans:Bold',sans-serif]">
+                                          {studentName
+                                            .split(" ")
+                                            .map((n) => n[0])
+                                            .join("")
+                                            .substring(0, 2)
+                                            .toUpperCase()}
+                                        </div>
+                                        <div>
+                                          <h3 className="font-['Rethink_Sans:Bold',sans-serif] text-[16px] md:text-[20px] text-gray-600">
+                                            {studentName}
+                                          </h3>
+                                          <p className="font-['Rethink_Sans:Regular',sans-serif] text-[12px] md:text-[14px] text-gray-500">
+                                            {new Date(
+                                              inquiry.created_at
+                                            ).toLocaleString("en-US", {
+                                              month: "short",
+                                              day: "numeric",
+                                              hour: "2-digit",
+                                              minute: "2-digit",
+                                            })}
+                                          </p>
+                                          <span className="inline-block px-2 py-1 bg-gray-300 text-gray-600 text-xs rounded-full mt-1">
+                                            Archived
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <p className="font-['Rethink_Sans:Regular',sans-serif] text-[14px] md:text-[16px] text-gray-600 mb-2">
+                                        "{inquiry.message}"
+                                      </p>
+                                      <p className="font-['Rethink_Sans:Medium',sans-serif] text-[12px] md:text-[14px] text-gray-500">
+                                        Property: {propertyTitle}
+                                      </p>
+                                    </div>
+                                    <div className="flex gap-2 flex-wrap">
+                                      <button
+                                        onClick={() =>
+                                          handleReplyToInquiry(inquiry)
+                                        }
+                                        className="bg-gray-400 text-white px-4 py-2 rounded-[10px] hover:bg-gray-500 transition-all hover:shadow-lg active:scale-95 cursor-pointer text-[14px]"
+                                      >
+                                        Reply
+                                      </button>
+                                    </div>
+                                  </div>
                                 </div>
-                              </div>
-                              <p className="font-['Rethink_Sans:Regular',sans-serif] text-[14px] md:text-[16px] text-[#597445] mb-2">
-                                "{inquiry.message}"
-                              </p>
-                              <p className="font-['Rethink_Sans:Medium',sans-serif] text-[12px] md:text-[14px] text-[#79ac78]">
-                                Property: {propertyTitle}
-                              </p>
-                            </div>
-                            <div className="flex gap-2 flex-wrap">
-                              <button
-                                onClick={() => handleReplyToInquiry(inquiry)}
-                                className="bg-[#597445] text-white px-4 py-2 rounded-[10px] hover:bg-[#4f6f52] transition-all hover:shadow-lg active:scale-95 cursor-pointer text-[14px]"
-                              >
-                                Reply
-                              </button>
-                              <button
-                                onClick={() => handleArchiveInquiry(inquiry.id)}
-                                className="bg-white text-[#597445] border-2 border-[#597445] px-4 py-2 rounded-[10px] hover:bg-[#f5f5f5] transition-all hover:shadow-md active:scale-95 cursor-pointer text-[14px]"
-                              >
-                                Archive
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })
+                              );
+                            })}
+                        </>
+                      )}
+                    </div>
                   )}
                 </div>
               )}
@@ -996,7 +1221,12 @@ export default function OwnerDashboard({
                         <div className="space-y-4">
                           {properties.map((property) => {
                             const propertyInquiries = inquiries.filter(
-                              (i) => getField<string>(i, 'property_id', 'propertyId') === property.id
+                              (i) =>
+                                getField<string>(
+                                  i,
+                                  "property_id",
+                                  "propertyId"
+                                ) === property.id
                             ).length;
                             return (
                               <div

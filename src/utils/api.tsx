@@ -695,27 +695,47 @@ export async function archiveInquiry(
   }
 }
 
-// Messages API
 export async function getConversation(
   userId1: string,
   userId2: string,
   accessToken: string
 ): Promise<Message[]> {
   try {
-    const response = await fetch(`${API_BASE}/messages/${userId1}/${userId2}`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
+    console.log('🔍 Fetching conversation between', userId1, 'and', userId2);
+    
+    // Create authenticated supabase client
+    const supabaseWithAuth = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
       },
     });
-    const data = await response.json();
 
-    if (!response.ok) {
-      throw new Error(data.error || "Failed to fetch messages");
+    const { data: messages, error } = await supabaseWithAuth
+      .from('messages')
+      .select('*')
+      .or(`and(sender_id.eq.${userId1},recipient_id.eq.${userId2}),and(sender_id.eq.${userId2},recipient_id.eq.${userId1})`)
+      .order('timestamp', { ascending: true });
+
+    if (error) {
+      console.error('❌ Database error:', error.message);
+      return [];
     }
 
-    return data.messages || [];
+    console.log(`✅ Found ${messages?.length || 0} messages`);
+    
+    return (messages || []).map((msg: any) => ({
+      id: msg.id,
+      senderId: msg.sender_id,
+      senderName: msg.sender_name,
+      recipientId: msg.recipient_id,
+      message: msg.message,
+      propertyId: msg.property_id,
+      timestamp: msg.timestamp || msg.created_at,
+    }));
   } catch (error) {
-    console.error("Error fetching messages:", error);
+    console.error("❌ Error fetching messages:", error);
     return [];
   }
 }
@@ -726,22 +746,142 @@ export async function sendMessage(
   propertyId: string | undefined,
   accessToken: string
 ): Promise<Message> {
-  const response = await fetch(`${API_BASE}/messages`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${accessToken}`,
-    },
-    body: JSON.stringify({ recipientId, message, propertyId }),
-  });
+  try {
+    console.log('📤 Sending message to', recipientId);
+    
+    // Create authenticated supabase client
+    const supabaseWithAuth = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      },
+    });
 
-  const data = await response.json();
+    // Get current user (the student sending the message)
+    const { data: userData, error: userError } = await supabaseWithAuth.auth.getUser();
+    
+    if (userError || !userData.user) {
+      throw new Error("User not authenticated");
+    }
 
-  if (!response.ok) {
-    throw new Error(data.error || "Failed to send message");
+    const senderId = userData.user.id;
+    const senderName = userData.user.user_metadata?.name || userData.user.email?.split('@')[0] || 'User';
+    const senderEmail = userData.user.email;
+
+    // **CRITICAL: Create an inquiry when student messages property owner**
+    if (propertyId) {
+      console.log('📝 Checking if we need to create inquiry for property:', propertyId);
+      
+      // Get property details to get owner_id
+      const { data: property, error: propertyError } = await supabaseWithAuth
+        .from('properties')
+        .select('title, owner_id, owner_name, owner_email')
+        .eq('id', propertyId)
+        .single();
+
+      if (propertyError) {
+        console.error('❌ Error fetching property details:', propertyError.message);
+      } else if (property) {
+        console.log('✅ Found property owner:', property.owner_id);
+        
+        // Check if an inquiry already exists
+        const { data: existingInquiry, error: inquiryCheckError } = await supabaseWithAuth
+          .from('inquiries')
+          .select('id')
+          .eq('property_id', propertyId)
+          .eq('student_id', senderId)  // Check by student_id
+          .eq('owner_id', property.owner_id)
+          .maybeSingle();
+
+        if (inquiryCheckError) {
+          console.warn('❌ Error checking existing inquiry:', inquiryCheckError.message);
+        }
+
+        // If no existing inquiry, create one
+        if (!existingInquiry) {
+          console.log('📝 Creating new inquiry...');
+          
+          const newInquiry = {
+            property_id: propertyId,
+            property_title: property.title,
+            student_id: senderId,           // ADD THIS: Link to student
+            student_name: senderName,
+            student_email: senderEmail,
+            message: message.trim(),
+            owner_id: property.owner_id,
+            status: 'active',
+            created_at: new Date().toISOString(),
+          };
+
+          console.log('📝 Inquiry data:', newInquiry);
+
+          const { data: inquiry, error: inquiryError } = await supabaseWithAuth
+            .from('inquiries')
+            .insert([newInquiry])
+            .select()
+            .single();
+
+          if (inquiryError) {
+            console.error('❌ Error creating inquiry:', inquiryError.message);
+            console.error('❌ Full error details:', inquiryError);
+          } else {
+            console.log('✅ Inquiry created successfully:', inquiry.id);
+            console.log('✅ Inquiry details:', inquiry);
+          }
+        } else {
+          console.log('ℹ️ Inquiry already exists, updating status to active');
+          // Update existing inquiry status to active and refresh timestamp
+          await supabaseWithAuth
+            .from('inquiries')
+            .update({ 
+              status: 'active', 
+              message: message.trim(), // Update with latest message
+              created_at: new Date().toISOString() 
+            })
+            .eq('id', existingInquiry.id);
+        }
+      }
+    } else {
+      console.log('ℹ️ No propertyId provided, skipping inquiry creation');
+    }
+
+    // Send the message (original functionality)
+    const newMessage = {
+      sender_id: senderId,
+      sender_name: senderName,
+      recipient_id: recipientId,
+      message: message.trim(),
+      property_id: propertyId,
+      timestamp: new Date().toISOString(),
+    };
+
+    const { data, error } = await supabaseWithAuth
+      .from('messages')
+      .insert([newMessage])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('❌ Database error sending message:', error.message);
+      throw new Error(`Failed to send message: ${error.message}`);
+    }
+
+    console.log('✅ Message sent successfully:', data.id);
+    
+    return {
+      id: data.id,
+      senderId: data.sender_id,
+      senderName: data.sender_name,
+      recipientId: data.recipient_id,
+      message: data.message,
+      propertyId: data.property_id,
+      timestamp: data.timestamp || data.created_at,
+    };
+  } catch (error: any) {
+    console.error("❌ Error in sendMessage function:", error);
+    throw new Error(error.message || "Failed to send message");
   }
-
-  return data.message;
 }
 
 export async function getPropertyReviews(
