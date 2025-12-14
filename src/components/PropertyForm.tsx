@@ -381,16 +381,23 @@ export default function PropertyForm({
 
   if (!isOpen) return null;
 
-  const availableAmenities = [
-    "WiFi",
-    "Air Conditioning",
-    "Kitchen",
-    "Parking",
-    "Laundry",
-    "Security",
-    "Study Desk",
-    "Water",
-  ];
+const availableAmenities = [
+  "WiFi",
+  "Air Conditioning",
+  "Kitchen",
+  "Parking",
+  "Laundry",
+  "Security",
+  "Study Desk",
+  "Free Water",
+  "Free Electricity",
+  "Television",
+  "Comfort Room",
+  "Smoking Allowed",
+  "Pets Allowed",
+  "No Curfew",
+  "Visitors Allowed",
+];
 
   return (
     <div
