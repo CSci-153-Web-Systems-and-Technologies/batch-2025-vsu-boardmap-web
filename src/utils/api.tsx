@@ -301,7 +301,7 @@ export async function getProperties(): Promise<Property[]> {
 
     if (error) throw error;
 
-const propertiesWithRatings = await Promise.all(
+    const propertiesWithRatings = await Promise.all(
       (data || []).map(async (property) => {
         // Get reviews for this property
         const { data: reviews } = await supabase
@@ -315,14 +315,17 @@ const propertiesWithRatings = await Promise.all(
 
         if (reviews && reviews.length > 0) {
           reviewsCount = reviews.length;
-          
+
           // Calculate average rating
-          const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
+          const totalRating = reviews.reduce(
+            (sum, review) => sum + review.rating,
+            0
+          );
           averageRating = totalRating / reviewsCount;
-          
+
           // Round to nearest 0.5
           roundedRating = Math.round(averageRating * 2) / 2;
-          
+
           // Handle edge cases (round 0.0-0.2 to 0, 0.3-0.7 to 0.5, 0.8-1.0 to 1.0)
           if (roundedRating < 0.25) roundedRating = 0;
           else if (roundedRating < 0.75) roundedRating = 0.5;
@@ -347,10 +350,10 @@ const propertiesWithRatings = await Promise.all(
 export function calculateRoundedRating(rating: number): number {
   // Round to nearest 0.5
   let rounded = Math.round(rating * 2) / 2;
-  
+
   // Apply specific rounding rules
   const decimal = rounded - Math.floor(rounded);
-  
+
   if (decimal === 0) {
     return rounded;
   } else if (decimal <= 0.2) {
@@ -741,10 +744,12 @@ export async function sendMessage(
   return data.message;
 }
 
-export async function getPropertyReviews(propertyId: string): Promise<Review[]> {
+export async function getPropertyReviews(
+  propertyId: string
+): Promise<Review[]> {
   try {
     console.log("Fetching reviews for property:", propertyId);
-    
+
     const { data, error } = await supabase
       .from("reviews")
       .select("*")
@@ -756,8 +761,10 @@ export async function getPropertyReviews(propertyId: string): Promise<Review[]> 
       return [];
     }
 
-    console.log(`Found ${data?.length || 0} reviews for property ${propertyId}`);
-    
+    console.log(
+      `Found ${data?.length || 0} reviews for property ${propertyId}`
+    );
+
     // Transform the data to match your Review interface
     return (data || []).map((review: any) => ({
       id: review.id,
@@ -784,42 +791,42 @@ export async function createReview(
 ): Promise<Review> {
   try {
     console.log("Creating review with data:", reviewData);
-    
+
     // Make sure supabase is initialized with the accessToken
     const supabase = createClient(accessToken);
-    
+
     // Get current user
     const { data: userData, error: userError } = await supabase.auth.getUser();
-    
+
     if (userError) {
       console.error("Error getting user:", userError);
       throw new Error("User not authenticated");
     }
-    
+
     const userId = userData.user.id;
-    const userName = userData.user.email?.split('@')[0] || 'Anonymous';
-    
+    const userName = userData.user.email?.split("@")[0] || "Anonymous";
+
     console.log("User ID:", userId, "User Name:", userName);
-    
+
     // Insert the review
     const { data, error } = await supabase
-      .from('reviews')
+      .from("reviews")
       .insert({
         property_id: reviewData.propertyId,
         user_id: userId,
-        user_name: userName,  // Make sure this column exists in your table
+        user_name: userName, // Make sure this column exists in your table
         rating: reviewData.rating,
         comment: reviewData.comment,
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
       })
       .select()
       .single();
-    
+
     if (error) {
       console.error("Supabase error creating review:", error);
       throw new Error(`Failed to create review: ${error.message}`);
     }
-    
+
     return data as Review;
   } catch (error) {
     console.error("Error in createReview:", error);
