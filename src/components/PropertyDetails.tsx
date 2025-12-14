@@ -276,9 +276,16 @@ export default function PropertyDetails({
             <h4 className="font-['Rethink_Sans:SemiBold',sans-serif] text-[20px] md:text-[24px] text-[#4f6f52] mb-3">
               Description
             </h4>
-            <p className="font-['Rethink_Sans:Regular',sans-serif] text-[14px] md:text-[16px] text-[#597445] leading-relaxed">
-              {property.description}
-            </p>
+            <div className="font-['Rethink_Sans:Regular',sans-serif] text-[14px] md:text-[16px] text-[#597445] leading-relaxed">
+              {property.description.split("\n").map((line, index) => (
+                <span key={index}>
+                  {line}
+                  {index < property.description.split("\n").length - 1 && (
+                    <br />
+                  )}
+                </span>
+              ))}
+            </div>
           </div>
 
           {/* Amenities */}
