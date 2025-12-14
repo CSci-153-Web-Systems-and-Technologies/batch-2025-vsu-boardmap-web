@@ -1,46 +1,282 @@
-# Getting Started with Create React App
+# 🗺️ VSU Boardmap Web
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+**A modern property and occupant management system for Visayas State University**
 
-## Available Scripts
+[![React](https://img.shields.io/badge/React-20232A?style=for-the-badge\&logo=react\&logoColor=61DAFB)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge\&logo=typescript\&logoColor=white)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Vite-B73BFE?style=for-the-badge\&logo=vite\&logoColor=FFD62E)](https://vitejs.dev/)
+[![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge\&logo=supabase\&logoColor=white)](https://supabase.com/)
+[![React Router](https://img.shields.io/badge/React_Router-CA4245?style=for-the-badge\&logo=react-router\&logoColor=white)](https://reactrouter.com/)
 
-In the project directory, you can run:
+---
 
-### `npm start`
+VSU Boardmap Web is a comprehensive web application designed to streamline **property management**, **occupant tracking**, and **communication** within **Visayas State University**. It serves as a digital boardmap system connecting **property owners** with **students and staff** seeking accommodation.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+🌐 **Live Demo:** [https://batch-2025-vsu-boardmap-web.vercel.app](https://batch-2025-vsu-boardmap-web.vercel.app)
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+---
 
-### `npm test`
+## ✨ Features
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### 🔐 Authentication & Security
 
-### `npm run build`
+* Secure authentication via **Supabase Auth**
+* Role-based access control (Owners & Occupants)
+* Protected routes and session handling
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### 🏠 Property Management
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+* Create, update, view, and delete property listings
+* Property details with images and specifications
+* Real-time occupancy status tracking
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### 👥 Occupant Management
 
-### `npm run eject`
+* Track current and past occupants
+* Manage agreements and occupancy terms
+* View occupant history per property
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+### 💬 Messaging System
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+* Real-time owner–occupant communication
+* Organized conversation threads
+* Message history per property or inquiry
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+### 📊 Dashboard & Analytics
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+* Owner dashboard overview
+* Inquiry and message notifications
+* Quick-access management actions
 
-## Learn More
+### 🎨 UI / UX
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+* Responsive design (desktop, tablet, mobile)
+* Clean and accessible interface
+* Intuitive navigation and custom branding
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+---
+
+## 🛠️ Technology Stack
+
+| Category   | Technology   | Description                |
+| ---------- | ------------ | -------------------------- |
+| Frontend   | React 18     | Component-based UI         |
+| Language   | TypeScript   | Type-safe development      |
+| Build Tool | Vite         | Fast dev server & bundling |
+| Routing    | React Router | Client-side navigation     |
+| Styling    | CSS3         | Custom responsive styles   |
+| Backend    | Supabase     | Auth, database, APIs       |
+| Deployment | Vercel       | Production hosting         |
+
+---
+
+## 📁 Project Structure
+
+```text
+batch-2025-vsu-boardmap-web/
+├── public/                 # Static assets
+│   ├── logo.png            # Application logo
+│   └── index.html          # HTML template
+├── src/                    # Source code
+│   ├── components/         # Reusable components
+│   │   ├── auth/           # Authentication
+│   │   ├── common/         # Shared UI
+│   │   ├── dashboard/      # Dashboard UI
+│   │   └── messaging/      # Messaging system
+│   ├── pages/              # Page-level components
+│   │   ├── LoginPage.tsx
+│   │   ├── SignupPage.tsx
+│   │   ├── OwnerDashboard.tsx
+│   │   └── ...
+│   ├── styles/             # CSS styles
+│   ├── utils/              # Helpers & utilities
+│   ├── types/              # TypeScript types
+│   ├── App.tsx             # Root component
+│   └── main.tsx            # Entry point
+├── .env.example            # Env template
+├── package.json            # Dependencies & scripts
+├── tsconfig.json           # TS config
+├── vite.config.ts          # Vite config
+└── README.md               # Documentation
+```
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+* **Node.js** v16+
+* **npm** v7+ or **yarn**
+* **Git**
+* **Supabase account** (free tier supported)
+
+### Installation
+
+```bash
+# Clone repository
+git clone https://github.com/CSci-153-Web-Systems-and-Technologies/batch-2025-vsu-boardmap-web.git
+cd batch-2025-vsu-boardmap-web
+
+# Install dependencies
+npm install
+# or
+yarn install
+```
+
+### Environment Variables
+
+```bash
+cp .env.example .env
+```
+
+Add the following from your Supabase dashboard:
+
+* Project URL
+* Anon public key
+
+### Supabase Setup
+
+In **Supabase → SQL Editor**, create tables for:
+
+* `profiles`
+* `properties`
+* `occupants`
+* `messages`
+* `inquiries`
+
+Enable **Row Level Security (RLS)** and configure policies accordingly.
+
+### Run Locally
+
+```bash
+npm run dev
+# or
+yarn dev
+```
+
+App runs at: **[http://localhost:5173](http://localhost:5173)**
+
+---
+
+## 📜 Available Scripts
+
+| Command           | Description              |
+| ----------------- | ------------------------ |
+| `npm run dev`     | Start development server |
+| `npm run build`   | Build for production     |
+| `npm run preview` | Preview production build |
+| `npm run lint`    | Run ESLint               |
+
+---
+
+## 📱 Application Workflow
+
+### Property Owners
+
+1. Register / Login
+2. Access owner dashboard
+3. Add and manage properties
+4. Track occupants & agreements
+5. Communicate via messaging system
+
+### Students & Staff (Occupants)
+
+1. Browse available properties
+2. Send inquiries
+3. Message property owners
+4. Manage agreements
+
+---
+
+## 🔧 Development Guide
+
+### Contribution Flow
+
+```bash
+git checkout -b feature/your-feature
+git commit -m "feat: add new feature"
+git push origin feature/your-feature
+```
+
+Open a **Pull Request** after testing.
+
+### Code Standards
+
+* TypeScript only
+* Functional React components
+* React Hooks for state management
+* Responsive-first design
+* Conventional commit messages
+
+---
+
+## 🧪 Testing
+
+### Manual Testing
+
+* Authentication flows
+* Property CRUD operations
+* Messaging system
+* Responsive UI
+
+### Recommended Tools
+
+```bash
+npm install --save-dev jest @testing-library/react @testing-library/jest-dom
+```
+
+---
+
+## 🌐 Deployment
+
+### Vercel (Recommended)
+
+1. Connect GitHub repo to Vercel
+2. Set environment variables
+3. Auto-deploy on `main` branch
+
+### Manual Build
+
+```bash
+npm run build
+```
+
+---
+
+## 👥 Contributors
+
+**Christian Earl James N. Boyles** – Lead Developer
+**Kyle Anthony Nierras** – Developer
+
+---
+
+## 🎓 Course Information
+
+Developed for **CSci 153: Web Systems and Technologies**
+Visayas State University — Batch 2025
+
+---
+
+## 📄 License
+
+This project is for **academic purposes only**.
+All rights reserved by the developers and Visayas State University.
+
+---
+
+## 🙏 Acknowledgments
+
+* Visayas State University
+* Supabase
+* React & Vite teams
+* CSci 153 instructors
+* Open-source community
+
+---
+
+## 📞 Support
+
+* GitHub Issues
+* Developer GitHub profiles
+* Course instructors

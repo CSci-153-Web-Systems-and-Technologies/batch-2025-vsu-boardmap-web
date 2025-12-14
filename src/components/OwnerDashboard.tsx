@@ -15,6 +15,14 @@ import {
 } from "./ui/alert-dialog";
 import PropertyDetails from "./PropertyDetails";
 import MessagingPage from "./MessagingPage";
+import AboutPage from "./AboutPage";
+import ContactPage from "./ContactPage";
+
+const svgPaths = {
+  p20d61300: "M22 2 11 13M22 2l-7 20-4-9-9-4 20-7Z",
+  p8bc8d00: "M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z",
+  p6985300: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"
+};
 
 // TypeScript Interfaces - Match your actual database schema
 interface Property {
@@ -134,7 +142,6 @@ function IconLogo() {
       className="grid-cols-[max-content] grid-rows-[max-content] inline-grid place-items-start relative shrink-0"
       data-name="Icon Logo"
     >
-      {/* Remove the green background circle and use your logo instead */}
       <img
         src="/BoardMap_Logo_White.png"
         alt="BoardMap Logo"
@@ -157,8 +164,24 @@ function LogoWithText() {
 
 function MessageCircle() {
   return (
-    <div className="relative shrink-0 size-[28px] md:size-[35px] flex items-center justify-center">
-      <span className="text-white text-[20px] md:text-[24px]">💬</span>
+    <div className="relative shrink-0 size-[28px] md:size-[35px]">
+      <svg
+        className="block size-full"
+        fill="none"
+        preserveAspectRatio="none"
+        viewBox="0 0 35 35"
+      >
+        <g id="Message circle">
+          <path
+            d={svgPaths.p20d61300}
+            id="Icon"
+            stroke="var(--stroke-0, white)"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="4"
+          />
+        </g>
+      </svg>
     </div>
   );
 }
@@ -177,10 +200,26 @@ function Messages({ onClick }: { onClick: () => void }) {
   );
 }
 
-function User() {
+function UserIcon() {
   return (
-    <div className="relative shrink-0 size-[28px] md:size-[35px] flex items-center justify-center">
-      <span className="text-white text-[20px] md:text-[24px]">👤</span>
+    <div className="relative shrink-0 size-[28px] md:size-[35px]">
+      <svg
+        className="block size-full"
+        fill="none"
+        preserveAspectRatio="none"
+        viewBox="0 0 35 35"
+      >
+        <g id="User">
+          <path
+            d={svgPaths.p8bc8d00}
+            id="Icon"
+            stroke="var(--stroke-0, white)"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="4"
+          />
+        </g>
+      </svg>
     </div>
   );
 }
@@ -193,7 +232,7 @@ interface UserProfileProps {
 function UserProfile({ name, type }: UserProfileProps) {
   return (
     <div className="content-stretch flex items-center justify-between gap-2 relative shrink-0">
-      <User />
+      <UserIcon />
       <div className="hidden md:flex content-stretch flex-col items-start justify-center leading-[0] relative shrink-0 w-[135px]">
         <div className="flex flex-col font-['Rethink_Sans:SemiBold',sans-serif] font-semibold justify-center relative shrink-0 text-[16px] text-white w-full">
           <p className="leading-normal truncate">{name}</p>
@@ -206,64 +245,30 @@ function UserProfile({ name, type }: UserProfileProps) {
   );
 }
 
-function LogOut({ onLogout }: { onLogout: () => void }) {
+function LogOutIcon({ onLogout }: { onLogout: () => void }) {
   return (
     <button
       onClick={onLogout}
-      className="relative shrink-0 size-[28px] md:size-[35px] cursor-pointer hover:opacity-80 transition-opacity flex items-center justify-center"
+      className="relative shrink-0 size-[28px] md:size-[35px] cursor-pointer hover:opacity-80 transition-opacity"
     >
-      <span className="text-white text-[20px] md:text-[24px]">🚪</span>
+      <svg
+        className="block size-full"
+        fill="none"
+        preserveAspectRatio="none"
+        viewBox="0 0 35 35"
+      >
+        <g id="Log out">
+          <path
+            d={svgPaths.p6985300}
+            id="Icon"
+            stroke="var(--stroke-0, white)"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="4"
+          />
+        </g>
+      </svg>
     </button>
-  );
-}
-
-interface HeaderProps {
-  user: { name: string; type: "student" | "owner"; accessToken: string };
-  onLogout: () => void;
-  onMessagesClick: () => void;
-  onMenuClick: () => void;
-}
-
-function Header({ user, onLogout, onMessagesClick, onMenuClick }: HeaderProps) {
-  return (
-    <div className="fixed top-0 left-0 right-0 bg-[#597445] box-border content-start flex flex-wrap gap-2 md:gap-[10px] h-[70px] md:h-[100px] items-center px-4 md:px-[50px] py-3 md:py-[25px] z-30">
-      {" "}
-      {/* Changed from z-50 to z-30 */}
-      <div
-        aria-hidden="true"
-        className="absolute border border-[#597445] border-solid inset-0 pointer-events-none shadow-[0px_4px_100px_0px_rgba(35,74,28,0.3)]"
-      />
-      <div className="content-end flex flex-wrap gap-4 md:gap-[984px] items-center justify-between relative shrink-0 w-full">
-        <LogoWithText />
-        <div className="hidden md:flex content-stretch gap-[30px] items-center relative shrink-0">
-          <button
-            onClick={onMessagesClick}
-            className="content-stretch flex items-center justify-between gap-2 relative shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
-          >
-            <MessageCircle />
-            <div className="flex flex-col font-['Rethink_Sans:SemiBold',sans-serif] font-semibold h-[20px] justify-center leading-[0] relative shrink-0 text-[18px] text-center text-white w-[100px]">
-              <p className="leading-[normal]">Messages</p>
-            </div>
-          </button>
-          <UserProfile name={user.name} type={user.type} />
-          <LogOut onLogout={onLogout} />
-        </div>
-        <div className="flex md:hidden items-center gap-3">
-          <button
-            onClick={onMessagesClick}
-            className="text-white hover:opacity-80 transition-opacity"
-          >
-            <MessageCircle />
-          </button>
-          <button
-            onClick={onMenuClick}
-            className="text-white hover:opacity-80 transition-opacity"
-          >
-            <Menu size={28} />
-          </button>
-        </div>
-      </div>
-    </div>
   );
 }
 
@@ -272,6 +277,8 @@ interface MobileMenuProps {
   onClose: () => void;
   onLogout: () => void;
   onMessagesClick: () => void;
+  onAboutClick: () => void;
+  onContactClick: () => void;
   user: { name: string; type: string };
 }
 
@@ -280,6 +287,8 @@ function MobileMenu({
   onClose,
   onLogout,
   onMessagesClick,
+  onAboutClick,
+  onContactClick,
   user,
 }: MobileMenuProps) {
   if (!isOpen) return null;
@@ -293,19 +302,19 @@ function MobileMenu({
         className="absolute right-0 top-0 h-full w-[280px] bg-[#597445] shadow-2xl z-[10001] md:hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="p-4 border-b border-[#79ac78] flex items-center justify-between">
-          <h2 className="font-['REM:SemiBold',sans-serif] text-[24px] text-white">
+        <div className="p-6 border-b border-[#79ac78] flex items-center justify-between">
+          <h2 className="font-['REM:SemiBold',sans-serif] text-[26px] text-white">
             Menu
           </h2>
           <button onClick={onClose} className="text-white hover:opacity-80">
-            <X size={24} />
+            <X size={26} />
           </button>
         </div>
-        <div className="p-4 space-y-4">
+        <div className="p-6 space-y-4">
           {/* User Info */}
-          <div className="bg-[#4f6f52] rounded-[10px] p-4 mb-4">
+          <div className="bg-[#4f6f52] rounded-[14px] p-4 mb-4">
             <div className="flex items-center gap-3 mb-2">
-              <User />
+              <UserIcon />
               <div>
                 <p className="font-['Rethink_Sans:SemiBold',sans-serif] text-[18px] text-white truncate">
                   {user.name}
@@ -322,20 +331,45 @@ function MobileMenu({
               onMessagesClick();
               onClose();
             }}
-            className="w-full flex items-center gap-3 p-4 text-white hover:bg-[#4f6f52] rounded-[10px] transition-all active:scale-98 cursor-pointer"
+            className="w-full flex items-center gap-4 p-4 text-white hover:bg-[#4f6f52] rounded-[14px] transition-all duration-200"
           >
             <MessageCircle />
             <span className="font-['Rethink_Sans:SemiBold',sans-serif] text-[18px]">
               Messages
             </span>
           </button>
-          <div className="border-t border-[#79ac78] pt-4 mt-4">
+
+          <button
+            onClick={() => {
+              onAboutClick();
+              onClose();
+            }}
+            className="w-full flex items-center gap-4 p-4 text-white hover:bg-[#4f6f52] rounded-[14px] transition-all duration-200"
+          >
+            <span className="font-['Rethink_Sans:SemiBold',sans-serif] text-[18px]">
+              About Us
+            </span>
+          </button>
+
+          <button
+            onClick={() => {
+              onContactClick();
+              onClose();
+            }}
+            className="w-full flex items-center gap-4 p-4 text-white hover:bg-[#4f6f52] rounded-[14px] transition-all duration-200"
+          >
+            <span className="font-['Rethink_Sans:SemiBold',sans-serif] text-[18px]">
+              Contact Us
+            </span>
+          </button>
+
+          <div className="border-t border-[#79ac78] pt-6">
             <button
               onClick={() => {
                 onLogout();
                 onClose();
               }}
-              className="w-full flex items-center gap-3 p-4 text-white hover:bg-[#4f6f52] rounded-[10px] transition-all active:scale-98 cursor-pointer"
+              className="w-full flex items-center gap-4 p-4 text-white hover:bg-[#4f6f52] rounded-[14px] transition-all duration-200"
             >
               <div className="relative shrink-0 size-[28px] flex items-center justify-center">
                 <span className="text-white text-[20px]">🚪</span>
@@ -345,6 +379,40 @@ function MobileMenu({
               </span>
             </button>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface HeaderProps {
+  user: { name: string; type: "student" | "owner" };
+  onLogout: () => void;
+  onMessagesClick: () => void;
+  onMenuClick: () => void;
+}
+
+function Header({ user, onLogout, onMessagesClick, onMenuClick }: HeaderProps) {
+  return (
+    <div className="fixed top-0 left-0 right-0 bg-[#597445] h-[70px] md:h-[85px] flex items-center px-6 md:px-8 z-[100] shadow-lg">
+      <div className="flex items-center justify-between w-full max-w-7xl mx-auto">
+        <LogoWithText />
+
+        {/* Desktop Navigation */}
+        <div className="hidden md:flex items-center gap-8">
+          <Messages onClick={onMessagesClick} />
+          <UserProfile name={user.name} type={user.type} />
+          <LogOutIcon onLogout={onLogout} />
+        </div>
+
+        {/* Mobile Navigation */}
+        <div className="flex md:hidden items-center gap-4">
+          <button
+            onClick={onMenuClick}
+            className="text-white hover:opacity-80 transition-opacity p-2"
+          >
+            <Menu size={24} />
+          </button>
         </div>
       </div>
     </div>
@@ -371,9 +439,9 @@ export default function OwnerDashboard({
     "analytics" | "properties" | "occupants" | "inquiries"
   >("properties");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState<"dashboard" | "messages">(
-    "dashboard"
-  );
+  const [currentPage, setCurrentPage] = useState<
+    "dashboard" | "messages" | "about" | "contact"
+  >("dashboard");
   const [isPropertyFormOpen, setIsPropertyFormOpen] = useState(false);
   const [editingProperty, setEditingProperty] = useState<Property | undefined>(
     undefined
@@ -387,8 +455,6 @@ export default function OwnerDashboard({
     type: "property" | "occupant";
     id: string;
   } | null>(null);
-
-  // Add state for PropertyDetails
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(
     null
   );
@@ -405,7 +471,6 @@ export default function OwnerDashboard({
         .eq("owner_id", user.id)
         .order("created_at", { ascending: false });
 
-      // Ensure description is always a string, not undefined
       const propertiesWithDefaults = ((properties as any[]) || []).map(
         (p: any) => ({
           ...p,
@@ -415,7 +480,7 @@ export default function OwnerDashboard({
 
       setProperties(propertiesWithDefaults || []);
 
-      // Try to fetch occupants (with error handling)
+      // Try to fetch occupants
       try {
         const { data: occupants, error: occupantsError } = await supabase
           .from("occupants")
@@ -428,7 +493,7 @@ export default function OwnerDashboard({
             "Occupants table might not exist:",
             occupantsError.message
           );
-          setOccupants([]); // Set empty array if table doesn't exist
+          setOccupants([]);
         } else {
           setOccupants(occupants || []);
         }
@@ -437,10 +502,8 @@ export default function OwnerDashboard({
         setOccupants([]);
       }
 
-      // **CRITICAL FIX: Fetch ALL inquiries (not just active)**
+      // Fetch inquiries
       try {
-        console.log("📋 Fetching ALL inquiries for owner:", user.id);
-
         const { data: allInquiries, error: inquiriesError } = await supabase
           .from("inquiries")
           .select("*")
@@ -451,17 +514,7 @@ export default function OwnerDashboard({
           console.error("❌ Error fetching inquiries:", inquiriesError.message);
           setInquiries([]);
         } else {
-          console.log(`✅ Found ${allInquiries?.length || 0} TOTAL inquiries`);
-
-          // **IMPORTANT: Display ALL inquiries, not just active ones**
-          // Active will show as normal, archived will be filtered in UI if needed
           setInquiries(allInquiries || []);
-
-          // Debug: Log the inquiries to see their structure
-          if (allInquiries && allInquiries.length > 0) {
-            console.log("📝 Sample inquiry:", allInquiries[0]);
-            console.log("📝 Inquiry status:", allInquiries[0].status);
-          }
         }
       } catch (err) {
         console.error("❌ Error fetching inquiries:", err);
@@ -475,7 +528,6 @@ export default function OwnerDashboard({
     }
   };
 
-  // Fetch data on mount
   useEffect(() => {
     let isMounted = true;
 
@@ -490,7 +542,7 @@ export default function OwnerDashboard({
     return () => {
       isMounted = false;
     };
-  }, [user.id]); // Add user.id as dependency
+  }, [user.id]);
 
   const handleAddProperty = () => {
     setEditingProperty(undefined);
@@ -556,7 +608,6 @@ export default function OwnerDashboard({
     }
   };
 
-  // Update handleReplyToInquiry to use onOpenMessaging
   const handleReplyToInquiry = (inquiry: Inquiry) => {
     const studentName = getField<string>(
       inquiry,
@@ -571,7 +622,6 @@ export default function OwnerDashboard({
     const studentId = getField<string>(inquiry, "student_id", "studentId");
 
     if (studentId) {
-      // Use the onOpenMessaging prop to open messaging
       onOpenMessaging(
         studentId,
         studentName || "Student",
@@ -589,12 +639,11 @@ export default function OwnerDashboard({
     await fetchData();
   };
 
-  // Update handlePropertyClick to open PropertyDetails
   const handlePropertyClick = (property: Property) => {
     setSelectedProperty(property);
   };
 
-  // Calculate stats with proper field access
+  // Calculate stats
   const totalProperties = properties.length;
   const totalOccupants = occupants.filter((o) => o.status === "active").length;
   const totalInquiries = inquiries.length;
@@ -605,34 +654,7 @@ export default function OwnerDashboard({
       return sum + rent;
     }, 0);
 
-  // Add this function to handle inquiry reply via messaging
-  const handleReplyViaMessaging = (inquiry: Inquiry) => {
-    const studentName = getField<string>(
-      inquiry,
-      "student_name",
-      "studentName"
-    );
-    const propertyTitle = getField<string>(
-      inquiry,
-      "property_title",
-      "propertyTitle"
-    );
-    const studentId = getField<string>(inquiry, "student_id", "studentId");
-
-    if (studentId) {
-      onOpenMessaging(
-        studentId,
-        studentName || "Student",
-        inquiry.property_id || inquiry.propertyId,
-        propertyTitle
-      );
-    } else {
-      toast.error("Cannot send message: Student ID not available");
-    }
-  };
-
-  // ... [Rest of your existing code remains the same until the properties map section]
-
+  // Render different pages
   if (currentPage === "messages") {
     return (
       <div className="bg-gradient-to-b from-[#e2f0d1] relative min-h-screen w-full to-[#ffffff] via-[#e8f3da] via-[18.561%] flex flex-col">
@@ -670,7 +692,7 @@ export default function OwnerDashboard({
             userId={user.id}
             accessToken={user.accessToken}
             onBack={() => setCurrentPage("dashboard")}
-            mode="list" // This shows ALL conversations for the owner
+            mode="list"
           />
         </div>
 
@@ -682,12 +704,137 @@ export default function OwnerDashboard({
             setIsMobileMenuOpen(false);
             setCurrentPage("messages");
           }}
+          onAboutClick={() => {
+            setIsMobileMenuOpen(false);
+            setCurrentPage("about");
+          }}
+          onContactClick={() => {
+            setIsMobileMenuOpen(false);
+            setCurrentPage("contact");
+          }}
           user={user}
         />
       </div>
     );
   }
 
+  if (currentPage === "about") {
+    return (
+      <div className="bg-gradient-to-b from-[#e2f0d1] relative min-h-screen w-full to-[#ffffff] via-[#e8f3da] via-[18.561%] flex flex-col">
+        <Header
+          user={user}
+          onLogout={onLogout}
+          onMessagesClick={() => setCurrentPage("messages")}
+          onMenuClick={() => setIsMobileMenuOpen(true)}
+        />
+
+        <div className="flex-1 mt-[70px] md:mt-[100px] p-4 md:p-8 max-w-7xl mx-auto w-full">
+          <button
+            onClick={() => setCurrentPage("dashboard")}
+            className="mb-6 flex items-center gap-2 text-[#597445] hover:opacity-70 transition-opacity"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10 19l-7-7m0 0l7-7m-7 7h18"
+              />
+            </svg>
+            <span className="font-['Rethink_Sans:SemiBold',sans-serif] text-[18px]">
+              Back to Dashboard
+            </span>
+          </button>
+
+          <AboutPage />
+        </div>
+
+        <MobileMenu
+          isOpen={isMobileMenuOpen}
+          onClose={() => setIsMobileMenuOpen(false)}
+          onLogout={onLogout}
+          onMessagesClick={() => {
+            setIsMobileMenuOpen(false);
+            setCurrentPage("messages");
+          }}
+          onAboutClick={() => {
+            setIsMobileMenuOpen(false);
+            setCurrentPage("about");
+          }}
+          onContactClick={() => {
+            setIsMobileMenuOpen(false);
+            setCurrentPage("contact");
+          }}
+          user={user}
+        />
+      </div>
+    );
+  }
+
+  if (currentPage === "contact") {
+    return (
+      <div className="bg-gradient-to-b from-[#e2f0d1] relative min-h-screen w-full to-[#ffffff] via-[#e8f3da] via-[18.561%] flex flex-col">
+        <Header
+          user={user}
+          onLogout={onLogout}
+          onMessagesClick={() => setCurrentPage("messages")}
+          onMenuClick={() => setIsMobileMenuOpen(true)}
+        />
+
+        <div className="flex-1 mt-[70px] md:mt-[100px] p-4 md:p-8 max-w-7xl mx-auto w-full">
+          <button
+            onClick={() => setCurrentPage("dashboard")}
+            className="mb-6 flex items-center gap-2 text-[#597445] hover:opacity-70 transition-opacity"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10 19l-7-7m0 0l7-7m-7 7h18"
+              />
+            </svg>
+            <span className="font-['Rethink_Sans:SemiBold',sans-serif] text-[18px]">
+              Back to Dashboard
+            </span>
+          </button>
+
+          <ContactPage />
+        </div>
+
+        <MobileMenu
+          isOpen={isMobileMenuOpen}
+          onClose={() => setIsMobileMenuOpen(false)}
+          onLogout={onLogout}
+          onMessagesClick={() => {
+            setIsMobileMenuOpen(false);
+            setCurrentPage("messages");
+          }}
+          onAboutClick={() => {
+            setIsMobileMenuOpen(false);
+            setCurrentPage("about");
+          }}
+          onContactClick={() => {
+            setIsMobileMenuOpen(false);
+            setCurrentPage("contact");
+          }}
+          user={user}
+        />
+      </div>
+    );
+  }
+
+  // Main Dashboard View
   return (
     <div className="bg-gradient-to-b from-[#e2f0d1] relative min-h-screen w-full to-[#ffffff] via-[#e8f3da] via-[18.561%] flex flex-col">
       <Header
@@ -786,6 +933,7 @@ export default function OwnerDashboard({
             </div>
           ) : (
             <>
+              {/* Properties Tab */}
               {currentTab === "properties" && (
                 <div className="space-y-4">
                   {properties.length === 0 ? (
@@ -870,6 +1018,7 @@ export default function OwnerDashboard({
                 </div>
               )}
 
+              {/* Occupants Tab */}
               {currentTab === "occupants" && (
                 <div className="space-y-6">
                   {occupants.length === 0 ? (
@@ -884,7 +1033,6 @@ export default function OwnerDashboard({
                       </p>
                     </div>
                   ) : (
-                    // Group occupants by property
                     properties.map((property) => {
                       const propertyOccupants = occupants.filter(
                         (o) =>
@@ -993,6 +1141,7 @@ export default function OwnerDashboard({
                 </div>
               )}
 
+              {/* Inquiries Tab */}
               {currentTab === "inquiries" && (
                 <div className="space-y-4">
                   {inquiries.length === 0 ? (
@@ -1004,16 +1153,6 @@ export default function OwnerDashboard({
                       <p className="font-['Rethink_Sans:Regular',sans-serif] text-[14px] md:text-[16px] text-[rgba(0,0,0,0.6)]">
                         Student inquiries about your properties will appear here
                       </p>
-                      {/* DEBUG INFO */}
-                      <div className="mt-4 p-4 bg-yellow-50 rounded-lg">
-                        <p className="text-sm text-yellow-800">
-                          <strong>Debug Info:</strong> Owner ID: {user.id}
-                        </p>
-                        <p className="text-sm text-yellow-800">
-                          Check if inquiries exist in Supabase table for this
-                          owner.
-                        </p>
-                      </div>
                     </div>
                   ) : (
                     <div className="space-y-4">
@@ -1196,6 +1335,7 @@ export default function OwnerDashboard({
                 </div>
               )}
 
+              {/* Analytics Tab */}
               {currentTab === "analytics" && (
                 <div className="space-y-6">
                   {properties.length === 0 ? (
@@ -1329,6 +1469,14 @@ export default function OwnerDashboard({
         onMessagesClick={() => {
           setIsMobileMenuOpen(false);
           setCurrentPage("messages");
+        }}
+        onAboutClick={() => {
+          setIsMobileMenuOpen(false);
+          setCurrentPage("about");
+        }}
+        onContactClick={() => {
+          setIsMobileMenuOpen(false);
+          setCurrentPage("contact");
         }}
         user={user}
       />
