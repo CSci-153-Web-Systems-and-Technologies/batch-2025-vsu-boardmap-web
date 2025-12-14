@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import Footer from "./Footer";
 import { createClient } from '../utils/supabase/client';
 import PropertyForm from "./PropertyForm";
 import { Menu, X, Trash2, Edit2 } from "lucide-react";
@@ -593,10 +592,6 @@ export default function OwnerDashboard({
           </div>
         </div>
 
-        <div className="mt-auto">
-          <Footer />
-        </div>
-
         <MobileMenu
           isOpen={isMobileMenuOpen}
           onClose={() => setIsMobileMenuOpen(false)}
@@ -1095,10 +1090,6 @@ export default function OwnerDashboard({
             </>
           )}
         </div>
-      </div>
-
-      <div className="mt-auto">
-        <Footer />
       </div>
 
       <MobileMenu
