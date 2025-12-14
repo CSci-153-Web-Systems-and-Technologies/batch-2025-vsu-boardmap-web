@@ -1052,6 +1052,7 @@ export default function StudentDashboard({
         onClose={() => setIsFilterOpen(false)}
         filters={filters}
         onApply={handleApplyFilters}
+        
       />
 
       <MobileMenu
