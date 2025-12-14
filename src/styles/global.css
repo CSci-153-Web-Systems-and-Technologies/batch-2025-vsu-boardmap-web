@@ -388,3 +388,51 @@ body.property-details-open .leaflet-container {
 .property-details-open .map-container {
   pointer-events: none !important;
 }
+
+/* In your global.css or a new CSS file */
+.leaflet-container {
+  /* Ensure map doesn't interfere with other elements */
+  position: relative;
+  z-index: 1;
+}
+
+/* When mobile menu is open, disable map interactions */
+body.mobile-menu-open .leaflet-container {
+  pointer-events: none;
+}
+
+/* Ensure modal/menu backdrops are above map */
+.modal-backdrop,
+.fixed.inset-0 {
+  z-index: 10000 !important;
+}
+
+/* Ensure modal/menu content is above backdrops */
+.modal-content,
+.fixed.right-0.top-0 {
+  z-index: 10001 !important;
+}
+
+/* Specific for mobile menu */
+.mobile-menu-container {
+  z-index: 10002 !important;
+}
+
+/* Disable map interactions when PropertyDetails is open */
+body.property-details-open .leaflet-container {
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Ensure PropertyDetails is above everything */
+.property-details-container {
+  z-index: 100000 !important;
+}
+
+.modal-overlay {
+  z-index: 99999 !important;
+}
+
+.modal-content {
+  z-index: 100000 !important;
+}

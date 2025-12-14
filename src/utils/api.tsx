@@ -19,6 +19,14 @@ function createClient(): SupabaseClient {
 // Initialize supabase client
 const supabase = createClient();
 
+export interface PropertyImage {
+  id: string;
+  url: string;
+  propertyId: string;
+  isPrimary: boolean;
+  createdAt: string;
+}
+
 export interface Room {
   roomNumber: string;
   maxOccupancy: number;
@@ -108,6 +116,181 @@ export interface FilterOptions {
   rating: number;
 }
 
+export async function uploadToStorage(
+  file: File,
+  propertyId: string
+): Promise<string> {
+  try {
+    console.log(
+      "Uploading file to storage:",
+      file.name,
+      "for property:",
+      propertyId
+    );
+
+    // Clean the filename - remove special characters
+    const cleanFileName = file.name
+      .replace(/[^a-zA-Z0-9.\-_]/g, "_") // Replace special chars with underscores
+      .replace(/\s+/g, "_") // Replace spaces with underscores
+      .replace(/\+/g, "_") // Replace + with underscores
+      .toLowerCase();
+
+    const fileExt = cleanFileName.split(".").pop() || "jpg";
+
+    // Generate safe filename
+    const fileName = `${propertyId}-${Date.now()}-${Math.random()
+      .toString(36)
+      .substring(2, 9)}.${fileExt}`;
+
+    console.log("Original filename:", file.name);
+    console.log("Cleaned filename:", cleanFileName);
+    console.log("Final filename for storage:", fileName);
+
+    // Upload file to Supabase Storage
+    const { data, error } = await supabase.storage
+      .from("property-images")
+      .upload(fileName, file, {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: file.type,
+      });
+
+    if (error) {
+      console.error("Error uploading to storage:", error);
+      throw new Error(`Upload failed: ${error.message}`);
+    }
+
+    // Get public URL
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from("property-images").getPublicUrl(fileName);
+
+    console.log("File uploaded successfully. Public URL:", publicUrl);
+    return publicUrl;
+  } catch (error: any) {
+    console.error("Upload error:", error);
+    throw new Error(`Failed to upload image: ${error.message}`);
+  }
+}
+
+export async function uploadMultipleToStorage(
+  files: File[],
+  propertyId: string
+): Promise<string[]> {
+  const uploadedUrls: string[] = [];
+
+  for (const file of files) {
+    try {
+      const url = await uploadToStorage(file, propertyId);
+      uploadedUrls.push(url);
+    } catch (error) {
+      console.error("Failed to upload file:", file.name, error);
+      // Continue with other files even if one fails
+    }
+  }
+
+  return uploadedUrls;
+}
+
+export async function deleteFromStorage(imageUrls: string[]): Promise<void> {
+  for (const url of imageUrls) {
+    try {
+      // Extract filename from URL
+      const urlParts = url.split("/");
+      const fileName = urlParts[urlParts.length - 1];
+
+      if (fileName) {
+        const { error } = await supabase.storage
+          .from("property-images")
+          .remove([fileName]);
+
+        if (error) {
+          console.error("Error deleting file:", fileName, error);
+        }
+      }
+    } catch (error) {
+      console.error("Error in deleteFromStorage:", error);
+    }
+  }
+}
+
+async function processPropertyImages(
+  images: string[],
+  propertyId: string
+): Promise<string[]> {
+  const processedImages: string[] = [];
+
+  for (const image of images) {
+    if (image.startsWith("blob:")) {
+      // Convert blob URL to file and upload
+      try {
+        const response = await fetch(image);
+        const blob = await response.blob();
+        const file = new File([blob], `image-${Date.now()}.jpg`, {
+          type: blob.type,
+        });
+        const uploadedUrl = await uploadToStorage(file, propertyId);
+        processedImages.push(uploadedUrl);
+      } catch (error) {
+        console.error("Error processing blob image:", error);
+      }
+    } else if (image && image.startsWith("http")) {
+      // Keep existing HTTP URLs
+      processedImages.push(image);
+    }
+  }
+
+  return processedImages;
+}
+
+export async function getPropertyImages(
+  propertyId: string
+): Promise<PropertyImage[]> {
+  try {
+    // Get the property
+    const { data: property, error } = await supabase
+      .from("properties")
+      .select("images")
+      .eq("id", propertyId)
+      .single();
+
+    if (error) {
+      console.error("Error fetching property:", error);
+      return [];
+    }
+
+    if (
+      property?.images &&
+      Array.isArray(property.images) &&
+      property.images.length > 0
+    ) {
+      return property.images.map((url: string, index: number) => {
+        // Check if URL is still a blob URL (shouldn't happen with new uploads)
+        let imageUrl = url;
+
+        if (url.startsWith("blob:")) {
+          console.warn("Blob URL found in database - needs migration:", url);
+          // Try to upload it now
+          imageUrl = `https://via.placeholder.com/800x400/597445/FFFFFF?text=Migrating+Image`;
+        }
+
+        return {
+          id: `img-${propertyId}-${index}`,
+          url: imageUrl,
+          propertyId: propertyId,
+          isPrimary: index === 0,
+          createdAt: new Date().toISOString(),
+        };
+      });
+    }
+
+    return [];
+  } catch (error) {
+    console.error("Error in getPropertyImages:", error);
+    return [];
+  }
+}
+
 // Properties API
 export async function getProperties(): Promise<Property[]> {
   try {
@@ -117,6 +300,17 @@ export async function getProperties(): Promise<Property[]> {
       .order("created_at", { ascending: false });
 
     if (error) throw error;
+
+    // Log sample data to debug
+    if (data && data.length > 0) {
+      console.log("Sample property from DB:", {
+        id: data[0].id,
+        title: data[0].title,
+        images: data[0].images,
+        imagesCount: data[0].images?.length || 0,
+      });
+    }
+
     return data || [];
   } catch (error) {
     console.error("Error fetching properties:", error);
@@ -140,34 +334,38 @@ export async function getOwnerProperties(ownerId: string): Promise<Property[]> {
   }
 }
 
-interface PropertyInsert {
-  title: string;
-  description: string;
-  price: number;
-  address: string;
-  location: { lat: number; lng: number };
-  type: string;
-  gender: string;
-  bedrooms: number;
-  bathrooms: number;
-  amenities: string[];
-  images: string[];
-  availability: string;
-  owner_phone?: string;
-  owner_id: string;
-  owner_name: string;
-  owner_email: string;
-}
-
 export async function createProperty(
-  propertyData: Partial<Property>
+  propertyData: Partial<Property> & { imageFiles?: File[] }
 ): Promise<Property> {
   try {
     console.log("Creating property with data:", propertyData);
 
-    // Ensure required fields are present - use title, not name
+    let imageUrls: string[] = [];
+
+    // If imageFiles are provided, upload them to storage
+    if (propertyData.imageFiles && propertyData.imageFiles.length > 0) {
+      console.log("Uploading image files to storage...");
+      const tempPropertyId = `temp-${Date.now()}`;
+      imageUrls = await uploadMultipleToStorage(
+        propertyData.imageFiles,
+        tempPropertyId
+      );
+      console.log("Uploaded images URLs:", imageUrls);
+    }
+    // If images array already has URLs (from editing), use them
+    else if (
+      propertyData.images &&
+      Array.isArray(propertyData.images) &&
+      propertyData.images.length > 0
+    ) {
+      imageUrls = propertyData.images.filter(
+        (url) => url && url.startsWith("http") && !url.startsWith("blob:")
+      );
+      console.log("Using existing image URLs:", imageUrls);
+    }
+
     const payload = {
-      title: propertyData.title, // This should work now with updated interface
+      title: propertyData.title,
       description: propertyData.description || "",
       price: Number(propertyData.price) || 0,
       address: propertyData.address || "",
@@ -177,12 +375,13 @@ export async function createProperty(
       bedrooms: Number(propertyData.bedrooms) || 1,
       bathrooms: Number(propertyData.bathrooms) || 1,
       amenities: propertyData.amenities || [],
-      images: propertyData.images || [],
+      images: imageUrls, // Use uploaded permanent URLs
       availability: propertyData.availability || "Available",
       owner_phone: propertyData.owner_phone || "",
       owner_id: propertyData.owner_id,
       owner_name: propertyData.owner_name,
       owner_email: propertyData.owner_email,
+      rooms: propertyData.rooms || [],
     };
 
     console.log("Sending to Supabase:", payload);
@@ -195,6 +394,12 @@ export async function createProperty(
 
     if (error) {
       console.error("Supabase error:", error);
+
+      // If property creation fails, clean up uploaded images
+      if (imageUrls.length > 0) {
+        await deleteFromStorage(imageUrls);
+      }
+
       throw new Error(error.message || "Failed to create property");
     }
 
@@ -211,6 +416,16 @@ export async function updateProperty(
   updates: Partial<Property>
 ): Promise<Property> {
   try {
+    // Process images if they're being updated
+    if (updates.images && Array.isArray(updates.images)) {
+      try {
+        const processedImages = await processPropertyImages(updates.images, id);
+        updates.images = processedImages;
+      } catch (imageError) {
+        console.error("Error processing update images:", imageError);
+      }
+    }
+
     const { data, error } = await supabase
       .from("properties")
       .update(updates)
@@ -482,19 +697,33 @@ export async function sendMessage(
   return data.message;
 }
 
-// Reviews API
-export async function getPropertyReviews(
-  propertyId: string
-): Promise<Review[]> {
+export async function getPropertyReviews(propertyId: string): Promise<Review[]> {
   try {
-    const response = await fetch(`${API_BASE}/reviews/property/${propertyId}`);
-    const data = await response.json();
+    console.log("Fetching reviews for property:", propertyId);
+    
+    const { data, error } = await supabase
+      .from("reviews")
+      .select("*")
+      .eq("property_id", propertyId)
+      .order("created_at", { ascending: false });
 
-    if (!response.ok) {
-      throw new Error(data.error || "Failed to fetch reviews");
+    if (error) {
+      console.error("Error fetching reviews:", error);
+      return [];
     }
 
-    return data.reviews || [];
+    console.log(`Found ${data?.length || 0} reviews for property ${propertyId}`);
+    
+    // Transform the data to match your Review interface
+    return (data || []).map((review: any) => ({
+      id: review.id,
+      propertyId: review.property_id,
+      userId: review.user_id,
+      userName: review.user_name,
+      rating: review.rating,
+      comment: review.comment,
+      createdAt: review.created_at,
+    }));
   } catch (error) {
     console.error("Error fetching reviews:", error);
     return [];
@@ -502,25 +731,56 @@ export async function getPropertyReviews(
 }
 
 export async function createReview(
-  reviewData: Partial<Review>,
+  reviewData: {
+    propertyId: string;
+    rating: number;
+    comment: string;
+  },
   accessToken: string
 ): Promise<Review> {
-  const response = await fetch(`${API_BASE}/reviews`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${accessToken}`,
-    },
-    body: JSON.stringify(reviewData),
-  });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.error || "Failed to create review");
+  try {
+    console.log("Creating review with data:", reviewData);
+    
+    // Make sure supabase is initialized with the accessToken
+    const supabase = createClient(accessToken);
+    
+    // Get current user
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    
+    if (userError) {
+      console.error("Error getting user:", userError);
+      throw new Error("User not authenticated");
+    }
+    
+    const userId = userData.user.id;
+    const userName = userData.user.email?.split('@')[0] || 'Anonymous';
+    
+    console.log("User ID:", userId, "User Name:", userName);
+    
+    // Insert the review
+    const { data, error } = await supabase
+      .from('reviews')
+      .insert({
+        property_id: reviewData.propertyId,
+        user_id: userId,
+        user_name: userName,  // Make sure this column exists in your table
+        rating: reviewData.rating,
+        comment: reviewData.comment,
+        created_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+    
+    if (error) {
+      console.error("Supabase error creating review:", error);
+      throw new Error(`Failed to create review: ${error.message}`);
+    }
+    
+    return data as Review;
+  } catch (error) {
+    console.error("Error in createReview:", error);
+    throw error;
   }
-
-  return data.review;
 }
 
 // Auth API
@@ -590,4 +850,21 @@ export function filterProperties(
     }
     return true;
   });
+}
+
+// Helper function to check if property exists
+export async function propertyExists(id: string): Promise<boolean> {
+  try {
+    const { data, error } = await supabase
+      .from("properties")
+      .select("id")
+      .eq("id", id)
+      .single();
+
+    if (error) return false;
+    return !!data;
+  } catch (error) {
+    console.error("Error checking property existence:", error);
+    return false;
+  }
 }

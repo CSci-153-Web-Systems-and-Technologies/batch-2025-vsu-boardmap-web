@@ -1,6 +1,4 @@
 import { useState, useEffect } from "react";
-import svgPaths from "../imports/svg-xxo13nfqz5";
-import Footer from "./Footer";
 import { createClient } from '../utils/supabase/client';
 import PropertyForm from "./PropertyForm";
 import { Menu, X, Trash2, Edit2 } from "lucide-react";
@@ -115,29 +113,6 @@ const updateInquiry = async (id: string, updates: InquiryUpdate): Promise<void> 
   if (error) throw error;
 };
 
-function Home() {
-  return (
-    <div className="[grid-area:1_/_1] ml-[6.207px] mt-[6.207px] relative size-[36.207px]">
-      <svg
-        className="block size-full"
-        fill="none"
-        preserveAspectRatio="none"
-        viewBox="0 0 37 37"
-      >
-        <g id="Home">
-          <path
-            d={svgPaths.p3ffc9300}
-            id="Icon"
-            stroke="var(--stroke-0, #597445)"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="4"
-          />
-        </g>
-      </svg>
-    </div>
-  );
-}
 
 function IconLogo() {
   return (
@@ -168,27 +143,12 @@ function LogoWithText() {
 
 function MessageCircle() {
   return (
-    <div className="relative shrink-0 size-[28px] md:size-[35px]">
-      <svg
-        className="block size-full"
-        fill="none"
-        preserveAspectRatio="none"
-        viewBox="0 0 35 35"
-      >
-        <g id="Message circle">
-          <path
-            d={svgPaths.p20d61300}
-            id="Icon"
-            stroke="var(--stroke-0, white)"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="4"
-          />
-        </g>
-      </svg>
+    <div className="relative shrink-0 size-[28px] md:size-[35px] flex items-center justify-center">
+      <span className="text-white text-[20px] md:text-[24px]">💬</span>
     </div>
   );
 }
+
 
 function Messages({ onClick }: { onClick: () => void }) {
   return (
@@ -206,24 +166,8 @@ function Messages({ onClick }: { onClick: () => void }) {
 
 function User() {
   return (
-    <div className="relative shrink-0 size-[28px] md:size-[35px]">
-      <svg
-        className="block size-full"
-        fill="none"
-        preserveAspectRatio="none"
-        viewBox="0 0 35 35"
-      >
-        <g id="User">
-          <path
-            d={svgPaths.p8bc8d00}
-            id="Icon"
-            stroke="var(--stroke-0, white)"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="4"
-          />
-        </g>
-      </svg>
+    <div className="relative shrink-0 size-[28px] md:size-[35px] flex items-center justify-center">
+      <span className="text-white text-[20px] md:text-[24px]">👤</span>
     </div>
   );
 }
@@ -253,25 +197,9 @@ function LogOut({ onLogout }: { onLogout: () => void }) {
   return (
     <button
       onClick={onLogout}
-      className="relative shrink-0 size-[28px] md:size-[35px] cursor-pointer hover:opacity-80 transition-opacity"
+      className="relative shrink-0 size-[28px] md:size-[35px] cursor-pointer hover:opacity-80 transition-opacity flex items-center justify-center"
     >
-      <svg
-        className="block size-full"
-        fill="none"
-        preserveAspectRatio="none"
-        viewBox="0 0 35 35"
-      >
-        <g id="Log out">
-          <path
-            d={svgPaths.p6985300}
-            id="Icon"
-            stroke="var(--stroke-0, white)"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="4"
-          />
-        </g>
-      </svg>
+      <span className="text-white text-[20px] md:text-[24px]">🚪</span>
     </button>
   );
 }
@@ -285,7 +213,7 @@ interface HeaderProps {
 
 function Header({ user, onLogout, onMessagesClick, onMenuClick }: HeaderProps) {
   return (
-    <div className="fixed top-0 left-0 right-0 bg-[#597445] box-border content-start flex flex-wrap gap-2 md:gap-[10px] h-[70px] md:h-[100px] items-center px-4 md:px-[50px] py-3 md:py-[25px] z-50">
+    <div className="fixed top-0 left-0 right-0 bg-[#597445] box-border content-start flex flex-wrap gap-2 md:gap-[10px] h-[70px] md:h-[100px] items-center px-4 md:px-[50px] py-3 md:py-[25px] z-30"> {/* Changed from z-50 to z-30 */}
       <div
         aria-hidden="true"
         className="absolute border border-[#597445] border-solid inset-0 pointer-events-none shadow-[0px_4px_100px_0px_rgba(35,74,28,0.3)]"
@@ -343,11 +271,11 @@ function MobileMenu({
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[200] md:hidden"
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[10000] md:hidden"
       onClick={onClose}
     >
       <div
-        className="absolute right-0 top-0 h-full w-[280px] bg-[#597445] shadow-2xl"
+        className="absolute right-0 top-0 h-full w-[280px] bg-[#597445] shadow-2xl z-[10001] md:hidden"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-4 border-b border-[#79ac78] flex items-center justify-between">
@@ -394,24 +322,8 @@ function MobileMenu({
               }}
               className="w-full flex items-center gap-3 p-4 text-white hover:bg-[#4f6f52] rounded-[10px] transition-all active:scale-98 cursor-pointer"
             >
-              <div className="relative shrink-0 size-[28px]">
-                <svg
-                  className="block size-full"
-                  fill="none"
-                  preserveAspectRatio="none"
-                  viewBox="0 0 35 35"
-                >
-                  <g id="Log out">
-                    <path
-                      d={svgPaths.p6985300}
-                      id="Icon"
-                      stroke="var(--stroke-0, white)"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="4"
-                    />
-                  </g>
-                </svg>
+              <div className="relative shrink-0 size-[28px] flex items-center justify-center">
+                <span className="text-white text-[20px]">🚪</span>
               </div>
               <span className="font-['Rethink_Sans:SemiBold',sans-serif] text-[18px]">
                 Log Out
@@ -423,6 +335,7 @@ function MobileMenu({
     </div>
   );
 }
+
 
 interface OwnerDashboardProps {
   user: {
@@ -478,32 +391,48 @@ export default function OwnerDashboard({
         description: p.description || ''
       }));
 
-      // Fetch occupants
-      const { data: occupants, error: occupantsError } = await supabase
-        .from('occupants')
-        .select('*')
-        .eq('owner_id', user.id)
-        .order('created_at', { ascending: false });
+      setProperties(propertiesWithDefaults || []);
 
-      // Fetch inquiries
-      const { data: inquiries, error: inquiriesError } = await supabase
-        .from('inquiries')
-        .select('*')
-        .eq('owner_id', user.id)
-      setProperties(propertiesWithDefaults);
+      // Try to fetch occupants (with error handling)
+      try {
+        const { data: occupants, error: occupantsError } = await supabase
+          .from('occupants')
+          .select('*')
+          .eq('owner_id', user.id)
+          .order('created_at', { ascending: false });
+        
+        if (occupantsError) {
+          console.warn('Occupants table might not exist:', occupantsError.message);
+          setOccupants([]); // Set empty array if table doesn't exist
+        } else {
+          setOccupants(occupants || []);
+        }
+      } catch (err) {
+        console.warn('Error fetching occupants:', err);
+        setOccupants([]);
+      }
 
-      if (propertiesError) console.error('Properties error:', propertiesError);
-      if (occupantsError) console.error('Occupants error:', occupantsError);
-      if (inquiriesError) console.error('Inquiries error:', inquiriesError);
-
-      setProperties(properties || []);
-      setOccupants(occupants || []);
-      
-      // Use the correct field name for status
-      const activeInquiries = (inquiries || []).filter(i => 
-        i.status === 'active' || (i as any).status === 'active'
-      );
-      setInquiries(activeInquiries);
+      // Try to fetch inquiries (with error handling)
+      try {
+        const { data: inquiries, error: inquiriesError } = await supabase
+          .from('inquiries')
+          .select('*')
+          .eq('owner_id', user.id);
+        
+        if (inquiriesError) {
+          console.warn('Inquiries table might not exist:', inquiriesError.message);
+          setInquiries([]); // Set empty array if table doesn't exist
+        } else {
+          // Use the correct field name for status
+          const activeInquiries = (inquiries || []).filter(i => 
+            i.status === 'active' || (i as any).status === 'active'
+          );
+          setInquiries(activeInquiries);
+        }
+      } catch (err) {
+        console.warn('Error fetching inquiries:', err);
+        setInquiries([]);
+      }
 
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -515,8 +444,20 @@ export default function OwnerDashboard({
 
   // Fetch data on mount
   useEffect(() => {
-    fetchData();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    let isMounted = true;
+    
+    const loadData = async () => {
+      if (isMounted) {
+        await fetchData();
+      }
+    };
+    
+    loadData();
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [user.id]); // Add user.id as dependency
 
   const handleAddProperty = () => {
     setEditingProperty(undefined);
@@ -538,10 +479,10 @@ export default function OwnerDashboard({
 
     try {
       if (itemToDelete.type === "property") {
-        await deleteProperty(itemToDelete.id);
+        await deleteProperty(itemToDelete.id, user.accessToken);
         toast.success("Property deleted successfully");
       } else if (itemToDelete.type === "occupant") {
-        await deleteOccupant(itemToDelete.id);
+        await deleteOccupant(itemToDelete.id, user.accessToken);
         toast.success("Occupant removed successfully");
       }
       await fetchData();
@@ -649,10 +590,6 @@ export default function OwnerDashboard({
               No messages yet. Your inquiries from students will appear here.
             </p>
           </div>
-        </div>
-
-        <div className="mt-auto">
-          <Footer />
         </div>
 
         <MobileMenu
@@ -1153,10 +1090,6 @@ export default function OwnerDashboard({
             </>
           )}
         </div>
-      </div>
-
-      <div className="mt-auto">
-        <Footer />
       </div>
 
       <MobileMenu

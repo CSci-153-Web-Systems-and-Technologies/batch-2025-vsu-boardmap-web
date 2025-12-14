@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Toaster } from "./components/ui/sooner";
 import LoadingScreen from "./components/LoadingScreen";
 import LandingPage from "./components/LandingPage";
 import StudentDashboard from "./components/StudentDashboard";
 import OwnerDashboard from "./components/OwnerDashboard";
-import { createClient } from "./utils/supabase/client"; // Import your Supabase client
+import { createClient } from "./utils/supabase/client";
 
 export type User = {
   id: string;
@@ -14,13 +14,43 @@ export type User = {
   accessToken: string;
 };
 
+// Helper function to store and retrieve user type from localStorage
+const STORAGE_KEY = "boardmap_user_type";
+
+const storeUserType = (userId: string, type: "student" | "owner") => {
+  const data = { userId, type, timestamp: Date.now() };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+};
+
+const getUserType = (userId: string): "student" | "owner" | null => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (!stored) return null;
+    
+    const data = JSON.parse(stored);
+    // Check if it's the same user and data is not too old (24 hours)
+    if (data.userId === userId && (Date.now() - data.timestamp) < 24 * 60 * 60 * 1000) {
+      return data.type;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+};
+
+const clearUserType = () => {
+  localStorage.removeItem(STORAGE_KEY);
+};
+
 export default function App() {
-  const [currentPage, setCurrentPage] = useState<"landing" | "dashboard">(
-    "landing"
-  );
+  const [currentPage, setCurrentPage] = useState<"landing" | "dashboard">("landing");
   const [user, setUser] = useState<User | null>(null);
   const [initialized, setInitialized] = useState(false);
   const [loading, setLoading] = useState(true);
+  
+  // Use refs to prevent duplicate processing
+  const authProcessingRef = useRef(false);
+  const lastUserIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     // Check if Leaflet is already loaded
@@ -28,7 +58,6 @@ export default function App() {
       return;
     }
 
-    // Load Leaflet script dynamically
     const script = document.createElement("script");
     script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
     script.async = true;
@@ -41,15 +70,13 @@ export default function App() {
     document.head.appendChild(script);
 
     return () => {
-      // Don't remove script on cleanup to avoid reloading
-      // document.head.removeChild(script);
+      // Don't remove script on cleanup
     };
   }, []);
 
   useEffect(() => {
     async function initialize() {
       try {
-        // Just initialize without sample data
         console.log("App initialized");
       } catch (err) {
         console.error("Error initializing:", err);
@@ -64,44 +91,131 @@ export default function App() {
     }
   }, [initialized]);
 
-  // Add auth state listener to handle session changes
+  // Add auth state listener with improved handling
   useEffect(() => {
     const supabase = createClient();
+    let mounted = true;
+
+    const handleAuthChange = async (event: string, session: any) => {
+      // Prevent multiple simultaneous auth state processing
+      if (authProcessingRef.current) {
+        console.log("Auth processing already in progress, skipping...");
+        return;
+      }
+
+      authProcessingRef.current = true;
+      
+      try {
+        console.log("Auth state changed:", event, "User ID:", session?.user?.id);
+
+        // Ignore some events to prevent unnecessary re-renders
+        if (event === "INITIAL_SESSION" || event === "TOKEN_REFRESHED") {
+          // Don't change state for these events if we already have a user
+          if (user && session?.user?.id === user.id) {
+            console.log("Same user, not updating state");
+            return;
+          }
+        }
+
+        if (session && (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "INITIAL_SESSION")) {
+          // Check if this is the same user we already have
+          if (lastUserIdRef.current === session.user.id && user) {
+            console.log("Same user ID, not updating");
+            return;
+          }
+
+          // Get user type from multiple sources in order of preference
+          let userType: "student" | "owner" = "student"; // Default to student
+          
+          // 1. Try localStorage first (most reliable for persistence)
+          const storedType = getUserType(session.user.id);
+          if (storedType) {
+            userType = storedType;
+            console.log("Got user type from localStorage:", userType);
+          }
+          // 2. Try user metadata
+          else if (session.user.user_metadata?.type) {
+            userType = session.user.user_metadata.type;
+            console.log("Got user type from metadata:", userType);
+            // Store it for future use
+            storeUserType(session.user.id, userType);
+          }
+          // 3. Try to get from database (if you have a profiles table)
+          else {
+            try {
+              const { data, error } = await supabase
+                .from("users") // Try different table names
+                .select("type")
+                .eq("id", session.user.id)
+                .single();
+              
+              if (!error && data?.type) {
+                userType = data.type;
+                console.log("Got user type from database:", userType);
+                storeUserType(session.user.id, userType);
+              }
+            } catch (dbErr) {
+              console.log("No user type in database, using default");
+            }
+          }
+
+          const userData = {
+            id: session.user.id,
+            name: session.user.user_metadata?.name ||
+                  session.user.email?.split("@")[0] ||
+                  "User",
+            email: session.user.email!,
+            type: userType,
+            accessToken: session.access_token,
+          };
+
+          console.log("Setting user with type:", userType);
+          
+          if (mounted) {
+            lastUserIdRef.current = session.user.id;
+            setUser(userData);
+            setCurrentPage("dashboard");
+          }
+          
+        } else if (event === "SIGNED_OUT") {
+          console.log("User signed out");
+          if (mounted) {
+            lastUserIdRef.current = null;
+            setUser(null);
+            setCurrentPage("landing");
+            clearUserType();
+          }
+        }
+      } catch (error) {
+        console.error("Error in auth state change handler:", error);
+      } finally {
+        authProcessingRef.current = false;
+      }
+    };
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state changed:", event);
+    } = supabase.auth.onAuthStateChange(handleAuthChange);
 
-      if (event === "SIGNED_IN" && session) {
-        const userData = {
-          id: session.user.id,
-          name:
-            session.user.user_metadata?.name ||
-            session.user.email?.split("@")[0] ||
-            "User",
-          email: session.user.email!,
-          type:
-            (session.user.user_metadata?.type as "student" | "owner") ||
-            "student",
-          accessToken: session.access_token,
-        };
-
-        setUser(userData);
-        setCurrentPage("dashboard");
-      } else if (event === "SIGNED_OUT") {
-        setUser(null);
-        setCurrentPage("landing");
-      } else if (event === "TOKEN_REFRESHED" && session) {
-        // Update access token if refreshed
-        setUser((prev) =>
-          prev ? { ...prev, accessToken: session.access_token } : null
-        );
+    // Also check current session on mount
+    const checkCurrentSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session && mounted) {
+          handleAuthChange("INITIAL_SESSION", session);
+        }
+      } catch (error) {
+        console.error("Error checking current session:", error);
       }
-    });
+    };
+    
+    checkCurrentSession();
 
-    return () => subscription.unsubscribe();
-  }, []);
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []); // Empty dependency array - only run once on mount
 
   const handleLogin = (
     id: string,
@@ -110,6 +224,9 @@ export default function App() {
     type: "student" | "owner",
     accessToken: string
   ) => {
+    // Store the type immediately
+    storeUserType(id, type);
+    
     setUser({ id, name, email, type, accessToken });
     setCurrentPage("dashboard");
   };
@@ -123,8 +240,25 @@ export default function App() {
     } finally {
       setUser(null);
       setCurrentPage("landing");
+      clearUserType();
     }
   };
+
+  // Add a visibility change handler to prevent unwanted re-renders
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log("Tab became visible, but not changing auth state");
+        // Do nothing - we want to keep the current user state
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
 
   if (loading) {
     return <LoadingScreen />;

@@ -8,30 +8,6 @@ interface FilterModalProps {
   onApply: (filters: FilterOptions) => void;
 }
 
-// function X() {
-//   return (
-//     <div className="relative shrink-0 size-6 md:size-[30px]">
-//       <svg
-//         className="block size-full"
-//         fill="none"
-//         preserveAspectRatio="none"
-//         viewBox="0 0 30 30"
-//       >
-//         <g id="X">
-//           <path
-//             d={svgPaths.p6985300}
-//             id="Icon"
-//             stroke="var(--stroke-0, #597445)"
-//             strokeLinecap="round"
-//             strokeLinejoin="round"
-//             strokeWidth="4"
-//           />
-//         </g>
-//       </svg>
-//     </div>
-//   );
-// }
-
 export default function FilterModal({
   isOpen,
   onClose,
@@ -69,8 +45,8 @@ export default function FilterModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center modal-overlay z-[150] p-4">
-      <div className="bg-[#e7f0dc] rounded-[20px] shadow-[0px_0px_20px_0px_rgba(89,116,69,0.3)] w-full max-w-[90vw] md:max-w-[600px] max-h-[90vh] overflow-y-auto filter-modal">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[150] pt-20 md:pt-24 p-4">
+      <div className="bg-[#e7f0dc] rounded-[20px] shadow-[0px_0px_20px_0px_rgba(89,116,69,0.3)] w-full max-w-[90vw] md:max-w-[600px] max-h-[90vh] overflow-y-auto z-[10001] mt-4">
         <div className="sticky top-0 bg-[#e7f0dc] border-b-4 border-[#597445] p-4 md:p-6 z-10 rounded-t-[20px]">
           <div className="flex items-center justify-between">
             <h2 className="font-['REM:SemiBold',sans-serif] text-[24px] md:text-[32px] text-[#4f6f52]">
@@ -108,7 +84,7 @@ export default function FilterModal({
                   placeholder="Min"
                   className="bg-white border-2 border-[#597445] rounded-[10px] px-4 py-2 w-full text-[#4f6f52] outline-none focus:ring-2 focus:ring-[#79ac78]"
                 />
-                <span className="text-[#4f6f52]">-</span>
+                <span className="text-[#4f6f52]">1</span>
                 <input
                   type="number"
                   value={localFilters.priceRange[1]}

@@ -214,11 +214,11 @@ function MobileMenu({
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9998] md:hidden"
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[10000] md:hidden"
       onClick={onClose}
     >
       <div
-        className="absolute right-0 top-0 h-full w-[280px] bg-[#597445] shadow-2xl z-[9999]"
+        className="absolute right-0 top-0 h-full w-[280px] bg-[#597445] shadow-2xl z-[10001] md:hidden"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-6 border-b border-[#79ac78] flex items-center justify-between">
@@ -1073,6 +1073,9 @@ export default function StudentDashboard({
       {selectedProperty && (
         <PropertyDetails
           property={selectedProperty}
+          userId={user.id} 
+          userName={user.name} 
+          accessToken={user.accessToken} 
           onClose={() => setSelectedProperty(null)}
         />
       )}
