@@ -731,43 +731,55 @@ export async function getPropertyReviews(propertyId: string): Promise<Review[]> 
 }
 
 export async function createReview(
-  reviewData: Partial<Review>,
+  reviewData: {
+    propertyId: string;
+    rating: number;
+    comment: string;
+  },
   accessToken: string
 ): Promise<Review> {
   try {
-    console.log("Creating review:", reviewData);
+    console.log("Creating review with data:", reviewData);
     
-    const payload = {
-      property_id: reviewData.propertyId,
-      user_id: reviewData.userId,
-      user_name: reviewData.userName,
-      rating: reviewData.rating,
-      comment: reviewData.comment,
-    };
-
+    // Make sure supabase is initialized with the accessToken
+    const supabase = createClient(accessToken);
+    
+    // Get current user
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    
+    if (userError) {
+      console.error("Error getting user:", userError);
+      throw new Error("User not authenticated");
+    }
+    
+    const userId = userData.user.id;
+    const userName = userData.user.email?.split('@')[0] || 'Anonymous';
+    
+    console.log("User ID:", userId, "User Name:", userName);
+    
+    // Insert the review
     const { data, error } = await supabase
-      .from("reviews")
-      .insert([payload])
+      .from('reviews')
+      .insert({
+        property_id: reviewData.propertyId,
+        user_id: userId,
+        user_name: userName,  // Make sure this column exists in your table
+        rating: reviewData.rating,
+        comment: reviewData.comment,
+        created_at: new Date().toISOString()
+      })
       .select()
       .single();
-
+    
     if (error) {
-      console.error("Error creating review:", error);
+      console.error("Supabase error creating review:", error);
       throw new Error(`Failed to create review: ${error.message}`);
     }
-
-    return {
-      id: data.id,
-      propertyId: data.property_id,
-      userId: data.user_id,
-      userName: data.user_name,
-      rating: data.rating,
-      comment: data.comment,
-      createdAt: data.created_at,
-    };
-  } catch (error: any) {
+    
+    return data as Review;
+  } catch (error) {
     console.error("Error in createReview:", error);
-    throw new Error(error.message || "Failed to create review");
+    throw error;
   }
 }
 

@@ -1052,7 +1052,6 @@ export default function StudentDashboard({
         onClose={() => setIsFilterOpen(false)}
         filters={filters}
         onApply={handleApplyFilters}
-        
       />
 
       <MobileMenu
@@ -1074,6 +1073,9 @@ export default function StudentDashboard({
       {selectedProperty && (
         <PropertyDetails
           property={selectedProperty}
+          userId={user.id} 
+          userName={user.name} 
+          accessToken={user.accessToken} 
           onClose={() => setSelectedProperty(null)}
         />
       )}
