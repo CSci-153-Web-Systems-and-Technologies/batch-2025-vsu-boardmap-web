@@ -74,19 +74,19 @@ VSU Boardmap Web is a comprehensive web application designed to streamline **pro
 
 ```text
 BATCH-2025-VSU-BOARDMAP-WEB/
-├── board-map/ # Main application folder
-├── build/ # Production build output
-├── node_modules/ # Dependencies
-├── public/ # Static assets
+├── board-map/             # Main application folder
+├── build/                 # Production build output
+├── node_modules/          # Dependencies
+├── public/                # Static assets
 │ ├── BoardMap_Logo.png
 │ ├── BoardMap_Logo_White.png
 │ ├── index.html
 │ ├── manifest.json
 │ └── robots.txt
-├── src/ # Source code
-│ ├── assets/ # Images and static assets
-│ ├── components/ # Reusable React components
-│ │ ├── ui/ # UI components
+├── src/                   # Source code
+│ ├── assets/              # Images and static assets
+│ ├── components/          # Reusable React components
+│ │ ├── ui/                # UI components
 │ │ ├── AboutPage.tsx
 │ │ ├── ContactPage.tsx
 │ │ ├── FilterModal.tsx
@@ -99,24 +99,24 @@ BATCH-2025-VSU-BOARDMAP-WEB/
 │ │ ├── PropertyDetails.tsx
 │ │ ├── PropertyForm.tsx
 │ │ └── StudentDashboard.tsx
-│ ├── imports/ # SVG and icon imports
-│ ├── styles/ # Global styles
+│ ├── imports/             # SVG and icon imports
+│ ├── styles/              # Global styles
 │ │ └── global.css
-│ ├── utils/ # Utility functions
-│ │ └── supabase/ # Supabase setup
-│ │ ├── functions/ # Supabase edge functions
+│ ├── utils/               # Utility functions
+│ │ └── supabase/          # Supabase setup
+│ │ ├── functions/         # Supabase edge functions
 │ │ ├── client.tsx
 │ │ ├── api.tsx
 │ │ ├── info.ts
 │ │ └── properties.ts
-│ ├── App.tsx # Root component
+│ ├── App.tsx              # Root component
 │ ├── App.css
-│ ├── index.tsx # Entry point
+│ ├── index.tsx            # Entry point
 │ ├── index.css
 │ ├── react-app-env.d.ts
 │ ├── reportWebVitals.ts
 │ └── setupTests.ts
-├── .env # Environment variables
+├── .env                   # Environment variables
 ├── .gitignore
 ├── .npmrc
 ├── package.json
@@ -124,32 +124,6 @@ BATCH-2025-VSU-BOARDMAP-WEB/
 ├── tsconfig.json
 ├── vite.config.ts
 └── README.md
-```text
-batch-2025-vsu-boardmap-web/
-├── public/ # Static assets
-│ ├── logo.png # Application logo
-│ └── index.html # HTML template
-├── src/ # Source code
-│ ├── components/ # Reusable components
-│ │ ├── auth/ # Authentication
-│ │ ├── common/ # Shared UI
-│ │ ├── dashboard/ # Dashboard UI
-│ │ └── messaging/ # Messaging system
-│ ├── pages/ # Page-level components
-│ │ ├── LoginPage.tsx
-│ │ ├── SignupPage.tsx
-│ │ ├── OwnerDashboard.tsx
-│ │ └── ...
-│ ├── styles/ # CSS styles
-│ ├── utils/ # Helpers & utilities
-│ ├── types/ # TypeScript types
-│ ├── App.tsx # Root component
-│ └── main.tsx # Entry point
-├── .env.example # Env template
-├── package.json # Dependencies & scripts
-├── tsconfig.json # TS config
-├── vite.config.ts # Vite config
-└── README.md # Documentation
 ```
 
 ---
