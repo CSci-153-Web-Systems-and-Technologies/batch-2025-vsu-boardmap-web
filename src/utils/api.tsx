@@ -301,20 +301,64 @@ export async function getProperties(): Promise<Property[]> {
 
     if (error) throw error;
 
-    // Log sample data to debug
-    if (data && data.length > 0) {
-      console.log("Sample property from DB:", {
-        id: data[0].id,
-        title: data[0].title,
-        images: data[0].images,
-        imagesCount: data[0].images?.length || 0,
-      });
-    }
+const propertiesWithRatings = await Promise.all(
+      (data || []).map(async (property) => {
+        // Get reviews for this property
+        const { data: reviews } = await supabase
+          .from("reviews")
+          .select("rating")
+          .eq("property_id", property.id);
 
-    return data || [];
+        let averageRating = 0;
+        let roundedRating = 0;
+        let reviewsCount = 0;
+
+        if (reviews && reviews.length > 0) {
+          reviewsCount = reviews.length;
+          
+          // Calculate average rating
+          const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
+          averageRating = totalRating / reviewsCount;
+          
+          // Round to nearest 0.5
+          roundedRating = Math.round(averageRating * 2) / 2;
+          
+          // Handle edge cases (round 0.0-0.2 to 0, 0.3-0.7 to 0.5, 0.8-1.0 to 1.0)
+          if (roundedRating < 0.25) roundedRating = 0;
+          else if (roundedRating < 0.75) roundedRating = 0.5;
+          else roundedRating = Math.round(roundedRating);
+        }
+
+        return {
+          ...property,
+          rating: roundedRating,
+          reviews: reviewsCount,
+        };
+      })
+    );
+
+    return propertiesWithRatings;
   } catch (error) {
     console.error("Error fetching properties:", error);
     return [];
+  }
+}
+
+export function calculateRoundedRating(rating: number): number {
+  // Round to nearest 0.5
+  let rounded = Math.round(rating * 2) / 2;
+  
+  // Apply specific rounding rules
+  const decimal = rounded - Math.floor(rounded);
+  
+  if (decimal === 0) {
+    return rounded;
+  } else if (decimal <= 0.2) {
+    return Math.floor(rounded);
+  } else if (decimal >= 0.8) {
+    return Math.ceil(rounded);
+  } else {
+    return Math.floor(rounded) + 0.5;
   }
 }
 
