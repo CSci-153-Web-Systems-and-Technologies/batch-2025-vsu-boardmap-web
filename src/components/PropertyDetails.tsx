@@ -56,6 +56,34 @@ export default function PropertyDetails({
     try {
       const propertyReviews = await getPropertyReviews(property.id);
       setReviews(propertyReviews);
+
+      // Calculate average rating
+      if (propertyReviews.length > 0) {
+        const totalRating = propertyReviews.reduce(
+          (sum, review) => sum + review.rating,
+          0
+        );
+        const averageRating = totalRating / propertyReviews.length;
+
+        // Round to nearest 0.5 with your specific rules
+        const roundedRating = Math.round(averageRating * 2) / 2;
+        const decimal = roundedRating - Math.floor(roundedRating);
+
+        let finalRating;
+        if (decimal === 0) {
+          finalRating = roundedRating;
+        } else if (decimal <= 0.2) {
+          finalRating = Math.floor(roundedRating);
+        } else if (decimal >= 0.8) {
+          finalRating = Math.ceil(roundedRating);
+        } else {
+          finalRating = Math.floor(roundedRating) + 0.5;
+        }
+
+        console.log(
+          `Rating calculation: Average=${averageRating}, Rounded=${roundedRating}, Final=${finalRating}`
+        );
+      }
     } catch (error) {
       console.error("Error loading reviews:", error);
     } finally {
