@@ -12,6 +12,7 @@ import "leaflet/dist/leaflet.css";
 import "../styles/global.css";
 import FilterModal from "./FilterModal";
 import PropertyDetails from "./PropertyDetails";
+import MessagingPage from "./MessagingPage";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -19,42 +20,6 @@ L.Icon.Default.mergeOptions({
   iconUrl: require("leaflet/dist/images/marker-icon.png"),
   shadowUrl: require("leaflet/dist/images/marker-shadow.png"),
 });
-
-// Mock SVG paths - in a real app, these would be imported
-const localSvgPaths = {
-  p3ffc9300:
-    "M9 21v-8.4a.6.6 0 0 1 .6-.6h4.8a.6.6 0 0 1 .6.6V21M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9z",
-  p20d61300:
-    "M17.5 22h.5a5 5 0 0 0 5-5v-2a5 5 0 0 0-5-5h-10a5 5 0 0 0-5 5v2a5 5 0 0 0 5 5h.5a5 5 0 0 1 4.5 3M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0z",
-  p8bc8d00:
-    "M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z",
-  p6985300: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9",
-  p27875740: "M3 12h.01M3 18h.01M3 6h.01M8 12h13M8 18h13M8 6h13",
-};
-
-function HomeIcon() {
-  return (
-    <div className="size-[38px] md:size-[32px]">
-      <svg
-        className="block size-full"
-        fill="none"
-        preserveAspectRatio="none"
-        viewBox="0 0 37 37"
-      >
-        <g id="Home">
-          <path
-            d={svgPaths.p3ffc9300}
-            id="Icon"
-            stroke="var(--stroke-0, #597445)"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="4"
-          />
-        </g>
-      </svg>
-    </div>
-  );
-}
 
 function IconLogo() {
   return (
@@ -872,19 +837,20 @@ function ListView({
 }
 
 interface StudentDashboardProps {
-  user: {
-    id: string;
-    name: string;
-    email: string;
-    type: "student" | "owner";
-    accessToken: string;
-  };
+  user: User;
   onLogout: () => void;
+  onOpenMessaging: (
+    recipientId: string,
+    recipientName: string,
+    propertyId?: string,
+    propertyTitle?: string
+  ) => void;
 }
 
 export default function StudentDashboard({
   user,
   onLogout,
+  onOpenMessaging,
 }: StudentDashboardProps) {
   const [isMap, setIsMap] = useState(true);
   const [allProperties, setAllProperties] = useState<Property[]>([]);
@@ -1004,19 +970,19 @@ export default function StudentDashboard({
               Messages
             </h1>
 
-            <div className="bg-white rounded-[20px] shadow-lg p-6 md:p-8">
-              <p className="text-[18px] text-[#597445] text-center">
-                No messages yet. Start connecting with property owners to see
-                your conversations here.
-              </p>
-            </div>
+            <MessagingPage
+              userId={user.id}
+              accessToken={user.accessToken}
+              onBack={() => setCurrentPage("dashboard")}
+              mode="list" // This shows ALL conversations for the student
+            />
           </div>
         </div>
 
         <MobileMenu
           isOpen={isMobileMenuOpen}
           onClose={() => setIsMobileMenuOpen(false)}
-          onLogout={handleLogout} // This should use the fixed handleLogout function
+          onLogout={handleLogout}
           onMessagesClick={handleMessagesClick}
           onAboutClick={() => setIsMobileMenuOpen(false)}
           onContactClick={() => setIsMobileMenuOpen(false)}
@@ -1073,10 +1039,11 @@ export default function StudentDashboard({
       {selectedProperty && (
         <PropertyDetails
           property={selectedProperty}
-          userId={user.id} 
-          userName={user.name} 
-          accessToken={user.accessToken} 
+          userId={user.id}
+          userName={user.name}
+          accessToken={user.accessToken}
           onClose={() => setSelectedProperty(null)}
+          onMessage={onOpenMessaging}
         />
       )}
 
