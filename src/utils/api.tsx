@@ -385,30 +385,19 @@ export async function createProperty(
   propertyData: Partial<Property> & { imageFiles?: File[] }
 ): Promise<Property> {
   try {
-    console.log("Creating property with data:", propertyData);
+    let imageUrls = Array.isArray(propertyData.images)
+      ? propertyData.images.filter(
+          (url) => url && url.startsWith("http") && !url.startsWith("blob:")
+        )
+      : [];
 
-    let imageUrls: string[] = [];
-
-    // If imageFiles are provided, upload them to storage
     if (propertyData.imageFiles && propertyData.imageFiles.length > 0) {
-      console.log("Uploading image files to storage...");
       const tempPropertyId = `temp-${Date.now()}`;
-      imageUrls = await uploadMultipleToStorage(
+      const uploadedImageUrls = await uploadMultipleToStorage(
         propertyData.imageFiles,
         tempPropertyId
       );
-      console.log("Uploaded images URLs:", imageUrls);
-    }
-    // If images array already has URLs (from editing), use them
-    else if (
-      propertyData.images &&
-      Array.isArray(propertyData.images) &&
-      propertyData.images.length > 0
-    ) {
-      imageUrls = propertyData.images.filter(
-        (url) => url && url.startsWith("http") && !url.startsWith("blob:")
-      );
-      console.log("Using existing image URLs:", imageUrls);
+      imageUrls = [...imageUrls, ...uploadedImageUrls];
     }
 
     const payload = {
@@ -431,8 +420,6 @@ export async function createProperty(
       rooms: propertyData.rooms || [],
     };
 
-    console.log("Sending to Supabase:", payload);
-
     const { data, error } = await supabase
       .from("properties")
       .insert([payload])
@@ -450,7 +437,6 @@ export async function createProperty(
       throw new Error(error.message || "Failed to create property");
     }
 
-    console.log("Property created successfully:", data);
     return data;
   } catch (error: any) {
     console.error("Error creating property:", error);
@@ -460,22 +446,39 @@ export async function createProperty(
 
 export async function updateProperty(
   id: string,
-  updates: Partial<Property>
+  updates: Partial<Property> & { imageFiles?: File[] }
 ): Promise<Property> {
   try {
-    // Process images if they're being updated
-    if (updates.images && Array.isArray(updates.images)) {
+    let nextImages = Array.isArray(updates.images)
+      ? updates.images.filter(
+          (url) => url && url.startsWith("http") && !url.startsWith("blob:")
+        )
+      : [];
+
+    if (updates.imageFiles && updates.imageFiles.length > 0) {
+      const uploadedImageUrls = await uploadMultipleToStorage(
+        updates.imageFiles,
+        id
+      );
+      nextImages = [...nextImages, ...uploadedImageUrls];
+    } else if (updates.images && Array.isArray(updates.images)) {
       try {
-        const processedImages = await processPropertyImages(updates.images, id);
-        updates.images = processedImages;
+        nextImages = await processPropertyImages(updates.images, id);
       } catch (imageError) {
         console.error("Error processing update images:", imageError);
       }
     }
 
+    const payload = {
+      ...updates,
+      images: nextImages,
+    };
+
+    delete (payload as { imageFiles?: File[] }).imageFiles;
+
     const { data, error } = await supabase
       .from("properties")
-      .update(updates)
+      .update(payload)
       .eq("id", id)
       .select()
       .single();
@@ -701,7 +704,7 @@ export async function getConversation(
   accessToken: string
 ): Promise<Message[]> {
   try {
-    console.log('🔍 Fetching conversation between', userId1, 'and', userId2);
+    console.log('ðŸ” Fetching conversation between', userId1, 'and', userId2);
     
     // Create authenticated supabase client
     const supabaseWithAuth = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
@@ -719,11 +722,11 @@ export async function getConversation(
       .order('timestamp', { ascending: true });
 
     if (error) {
-      console.error('❌ Database error:', error.message);
+      console.error('âŒ Database error:', error.message);
       return [];
     }
 
-    console.log(`✅ Found ${messages?.length || 0} messages`);
+    console.log(`âœ… Found ${messages?.length || 0} messages`);
     
     return (messages || []).map((msg: any) => ({
       id: msg.id,
@@ -735,7 +738,7 @@ export async function getConversation(
       timestamp: msg.timestamp || msg.created_at,
     }));
   } catch (error) {
-    console.error("❌ Error fetching messages:", error);
+    console.error("âŒ Error fetching messages:", error);
     return [];
   }
 }
@@ -747,7 +750,7 @@ export async function sendMessage(
   accessToken: string
 ): Promise<Message> {
   try {
-    console.log('📤 Sending message to', recipientId);
+    console.log('ðŸ“¤ Sending message to', recipientId);
     
     // Create authenticated supabase client
     const supabaseWithAuth = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
@@ -771,7 +774,7 @@ export async function sendMessage(
 
     // **CRITICAL: Create an inquiry when student messages property owner**
     if (propertyId) {
-      console.log('📝 Checking if we need to create inquiry for property:', propertyId);
+      console.log('ðŸ“ Checking if we need to create inquiry for property:', propertyId);
       
       // Get property details to get owner_id
       const { data: property, error: propertyError } = await supabaseWithAuth
@@ -781,9 +784,9 @@ export async function sendMessage(
         .single();
 
       if (propertyError) {
-        console.error('❌ Error fetching property details:', propertyError.message);
+        console.error('âŒ Error fetching property details:', propertyError.message);
       } else if (property) {
-        console.log('✅ Found property owner:', property.owner_id);
+        console.log('âœ… Found property owner:', property.owner_id);
         
         // Check if an inquiry already exists
         const { data: existingInquiry, error: inquiryCheckError } = await supabaseWithAuth
@@ -795,12 +798,12 @@ export async function sendMessage(
           .maybeSingle();
 
         if (inquiryCheckError) {
-          console.warn('❌ Error checking existing inquiry:', inquiryCheckError.message);
+          console.warn('âŒ Error checking existing inquiry:', inquiryCheckError.message);
         }
 
         // If no existing inquiry, create one
         if (!existingInquiry) {
-          console.log('📝 Creating new inquiry...');
+          console.log('ðŸ“ Creating new inquiry...');
           
           const newInquiry = {
             property_id: propertyId,
@@ -814,7 +817,7 @@ export async function sendMessage(
             created_at: new Date().toISOString(),
           };
 
-          console.log('📝 Inquiry data:', newInquiry);
+          console.log('ðŸ“ Inquiry data:', newInquiry);
 
           const { data: inquiry, error: inquiryError } = await supabaseWithAuth
             .from('inquiries')
@@ -823,14 +826,14 @@ export async function sendMessage(
             .single();
 
           if (inquiryError) {
-            console.error('❌ Error creating inquiry:', inquiryError.message);
-            console.error('❌ Full error details:', inquiryError);
+            console.error('âŒ Error creating inquiry:', inquiryError.message);
+            console.error('âŒ Full error details:', inquiryError);
           } else {
-            console.log('✅ Inquiry created successfully:', inquiry.id);
-            console.log('✅ Inquiry details:', inquiry);
+            console.log('âœ… Inquiry created successfully:', inquiry.id);
+            console.log('âœ… Inquiry details:', inquiry);
           }
         } else {
-          console.log('ℹ️ Inquiry already exists, updating status to active');
+          console.log('â„¹ï¸ Inquiry already exists, updating status to active');
           // Update existing inquiry status to active and refresh timestamp
           await supabaseWithAuth
             .from('inquiries')
@@ -843,7 +846,7 @@ export async function sendMessage(
         }
       }
     } else {
-      console.log('ℹ️ No propertyId provided, skipping inquiry creation');
+      console.log('â„¹ï¸ No propertyId provided, skipping inquiry creation');
     }
 
     // Send the message (original functionality)
@@ -863,11 +866,11 @@ export async function sendMessage(
       .single();
 
     if (error) {
-      console.error('❌ Database error sending message:', error.message);
+      console.error('âŒ Database error sending message:', error.message);
       throw new Error(`Failed to send message: ${error.message}`);
     }
 
-    console.log('✅ Message sent successfully:', data.id);
+    console.log('âœ… Message sent successfully:', data.id);
     
     return {
       id: data.id,
@@ -879,7 +882,7 @@ export async function sendMessage(
       timestamp: data.timestamp || data.created_at,
     };
   } catch (error: any) {
-    console.error("❌ Error in sendMessage function:", error);
+    console.error("âŒ Error in sendMessage function:", error);
     throw new Error(error.message || "Failed to send message");
   }
 }
@@ -933,7 +936,13 @@ export async function createReview(
     console.log("Creating review with data:", reviewData);
 
     // Make sure supabase is initialized with the accessToken
-    const supabase = createClient(accessToken);
+        const supabase = createSupabaseClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: {
+          Authorization: Bearer ,
+        },
+      },
+    });
 
     // Get current user
     const { data: userData, error: userError } = await supabase.auth.getUser();
@@ -1059,3 +1068,4 @@ export async function propertyExists(id: string): Promise<boolean> {
     return false;
   }
 }
+
