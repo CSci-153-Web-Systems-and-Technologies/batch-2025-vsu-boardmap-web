@@ -67,6 +67,11 @@ export default function App() {
   // Use refs to prevent duplicate processing
   const authProcessingRef = useRef(false);
   const lastUserIdRef = useRef<string | null>(null);
+  const userRef = useRef<User | null>(null);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
 
   const openMessaging = (
     recipientId: string,
@@ -180,25 +185,25 @@ export default function App() {
         );
 
         // Ignore some events to prevent unnecessary re-renders
-        if (event === "INITIAL_SESSION" || event === "TOKEN_REFRESHED") {
-          // Don't change state for these events if we already have a user
-          if (user && session?.user?.id === user.id) {
-            console.log("Same user, not updating state");
-            return;
-          }
+          if (event === "INITIAL_SESSION" || event === "TOKEN_REFRESHED") {
+            // Don't change state for these events if we already have a user
+            if (userRef.current && session?.user?.id === userRef.current.id) {
+              console.log("Same user, not updating state");
+              return;
+            }
         }
 
-        if (
-          session &&
-          (event === "SIGNED_IN" ||
-            event === "TOKEN_REFRESHED" ||
-            event === "INITIAL_SESSION")
-        ) {
-          // Check if this is the same user we already have
-          if (lastUserIdRef.current === session.user.id && user) {
-            console.log("Same user ID, not updating");
-            return;
-          }
+          if (
+            session &&
+            (event === "SIGNED_IN" ||
+              event === "TOKEN_REFRESHED" ||
+              event === "INITIAL_SESSION")
+          ) {
+            // Check if this is the same user we already have
+            if (lastUserIdRef.current === session.user.id && userRef.current) {
+              console.log("Same user ID, not updating");
+              return;
+            }
 
           // Get user type from multiple sources in order of preference
           let userType: "student" | "owner" = "student"; // Default to student
