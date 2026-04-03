@@ -1,3 +1,11 @@
+import {
+  Bath,
+  BedDouble,
+  MapPin,
+  ShieldCheck,
+  Sparkles,
+  Star,
+} from "lucide-react";
 import { Property } from "../utils/api";
 
 interface PropertyCardProps {
@@ -6,193 +14,165 @@ interface PropertyCardProps {
 }
 
 export default function PropertyCard({ property, onClick }: PropertyCardProps) {
-  // Get the first image URL from Supabase storage
-  const imageSrc = property.images?.[0] || undefined;
+  const imageSrc = property.images?.[0];
+  const ownerName = (property as any).owner_name || (property as any).ownerName || "Owner";
+  const rating = Number(property.rating || 0);
+  const reviews = Number(property.reviews || 0);
+  const amenities = Array.isArray(property.amenities) ? property.amenities : [];
+  const compactPillStyle = {
+    padding: "0.28rem 0.56rem",
+    fontSize: "0.79rem",
+  } as const;
 
   return (
-    <div
+    <button
+      type="button"
       onClick={onClick}
-      className="bg-white rounded-[15px] shadow-[0px_0px_10px_0px_rgba(89,116,69,0.2)] overflow-hidden flex flex-col hover:shadow-[0px_0px_20px_0px_rgba(89,116,69,0.3)] transition-all cursor-pointer group"
+      className="boardmap-list-card"
+      style={{
+        textAlign: "left",
+        cursor: "pointer",
+        overflow: "hidden",
+        padding: 0,
+      }}
     >
-      {/* Image */}
-      <div className="relative h-[180px] sm:h-[200px] md:h-[220px] bg-[#e7f0dc] overflow-hidden">
+      <div style={{ position: "relative", minHeight: 154, background: "#dbead5" }}>
         {imageSrc ? (
           <img
             src={imageSrc}
             alt={property.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            style={{ width: "100%", height: 160, objectFit: "cover" }}
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-[#597445]">
-            No Image
+          <div
+            style={{
+              width: "100%",
+              height: 160,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#2f6a45",
+              background: "linear-gradient(135deg, rgba(47,106,69,0.14), rgba(115,168,109,0.18))",
+            }}
+          >
+            <Sparkles size={32} />
           </div>
         )}
-        <div className="absolute top-3 right-3 bg-white/95 px-3 py-1 rounded-full">
-          <span
-            className={`font-['Rethink_Sans:SemiBold',sans-serif] text-[12px] ${
-              property.availability === "Available"
-                ? "text-[#79ac78]"
-                : "text-[#d97445]"
-            }`}
-          >
+
+        <div
+          style={{
+            position: "absolute",
+            top: 12,
+            left: 12,
+            display: "flex",
+            gap: 6,
+            flexWrap: "wrap",
+          }}
+        >
+          <span className="boardmap-badge" style={{ background: "rgba(255,255,255,0.92)" }}>
+            <ShieldCheck size={14} />
             {property.availability}
           </span>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="p-4 flex flex-col gap-3 flex-1">
-        <div className="flex flex-col gap-2">
-          <h3 className="font-['Rethink_Sans:SemiBold',sans-serif] text-[16px] sm:text-[18px] text-[#4f6f52] line-clamp-2">
+      <div style={{ padding: "0.78rem 0.85rem 0.82rem", display: "grid", gap: "0.55rem" }}>
+        <div>
+          <h3 className="boardmap-section-title" style={{ fontSize: "1rem", lineHeight: 1.12 }}>
             {property.title}
           </h3>
-          <p className="font-['Rethink_Sans:Regular',sans-serif] text-[13px] sm:text-[14px] text-[#597445] line-clamp-2">
+          <p
+            className="boardmap-section-copy"
+            style={{
+              marginTop: "0.24rem",
+              fontSize: "0.9rem",
+              lineHeight: 1.42,
+              display: "-webkit-box",
+              WebkitLineClamp: 1,
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
+            }}
+          >
             {property.description}
           </p>
         </div>
 
-        <div className="flex items-center gap-2 text-[#597445]">
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-            />
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-            />
-          </svg>
-          <span className="font-['Rethink_Sans:Regular',sans-serif] text-[12px] sm:text-[13px] line-clamp-1">
+        <div className="boardmap-inline-meta" style={{ gap: "0.35rem", fontSize: "0.9rem" }}>
+          <span style={compactPillStyle}>
+            <MapPin size={13} />
             {property.address}
+          </span>
+          <span style={compactPillStyle}>
+            <BedDouble size={13} />
+            {property.bedrooms} bed
+          </span>
+          <span style={compactPillStyle}>
+            <Bath size={13} />
+            {property.bathrooms} bath
           </span>
         </div>
 
-        {/* Property Details */}
-        <div className="flex items-center gap-4 text-[#597445]">
-          <div className="flex items-center gap-1">
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-              />
-            </svg>
-            <span className="font-['Rethink_Sans:Medium',sans-serif] text-[12px]">
-              {property.type}
-            </span>
-          </div>
-          <span className="text-[#e7f0dc]">•</span>
-          <div className="flex items-center gap-1">
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
-              />
-            </svg>
-            <span className="font-['Rethink_Sans:Medium',sans-serif] text-[12px]">
-              {property.bedrooms} bed
-            </span>
-          </div>
-          <span className="text-[#e7f0dc]">•</span>
-          <div className="flex items-center gap-1">
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
-            <span className="font-['Rethink_Sans:Medium',sans-serif] text-[12px]">
-              {property.bathrooms} bath
-            </span>
-          </div>
-        </div>
-
-        {/* Amenities */}
-        <div className="flex flex-wrap gap-1.5">
-          {property.amenities.slice(0, 3).map((amenity) => (
-            <span
-              key={amenity}
-              className="bg-[#e7f0dc] px-2 py-1 rounded-[8px] font-['Rethink_Sans:Medium',sans-serif] text-[11px] sm:text-[12px] text-[#597445]"
-            >
+        <div className="boardmap-chip-row" style={{ gap: "0.32rem" }}>
+          <span className="boardmap-chip" style={compactPillStyle}>{property.type}</span>
+          <span className="boardmap-chip" style={compactPillStyle}>{property.gender}</span>
+          {amenities.slice(0, 1).map((amenity) => (
+            <span key={amenity} className="boardmap-chip" style={compactPillStyle}>
               {amenity}
             </span>
           ))}
-          {property.amenities.length > 3 && (
-            <span className="bg-[#e7f0dc] px-2 py-1 rounded-[8px] font-['Rethink_Sans:Medium',sans-serif] text-[11px] sm:text-[12px] text-[#597445]">
-              +{property.amenities.length - 3}
-            </span>
+          {amenities.length > 1 && (
+            <span className="boardmap-chip" style={compactPillStyle}>+{amenities.length - 1} more</span>
           )}
         </div>
 
-        {/* Price and Rating */}
-        <div className="flex items-center justify-between mt-auto pt-2 border-t border-[#e7f0dc]">
-          <div className="flex flex-col">
-            <span className="font-['Rethink_Sans:Bold',sans-serif] text-[20px] sm:text-[22px] text-[#79ac78]">
-              ₱{property.price.toLocaleString()}
-            </span>
-            <span className="font-['Rethink_Sans:Regular',sans-serif] text-[11px] sm:text-[12px] text-[#597445]">
-              per month
-            </span>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "0.65rem",
+            paddingTop: "0.05rem",
+          }}
+        >
+          <div>
+            <strong
+              style={{
+                display: "block",
+                color: "#214f34",
+                fontSize: "1.08rem",
+                fontWeight: 800,
+              }}
+            >
+              PHP {Number(property.price || 0).toLocaleString()}
+            </strong>
+            <span className="boardmap-helper" style={{ fontSize: "0.8rem" }}>per month</span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <span className="text-[#fbbf24] text-[18px] sm:text-[20px]">★</span>
-            <div className="flex flex-col items-start">
-              <span className="font-['Rethink_Sans:SemiBold',sans-serif] text-[14px] sm:text-[15px] text-[#4f6f52]">
-                {property.rating.toFixed(1)}
-              </span>
-              <span className="font-['Rethink_Sans:Regular',sans-serif] text-[10px] sm:text-[11px] text-[#597445]">
-                ({property.reviews} reviews)
-              </span>
+
+          <div style={{ textAlign: "right" }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+              <Star size={15} fill="#f5c451" color="#f5c451" />
+              <strong style={{ color: "#214f34", fontSize: "0.9rem" }}>{rating.toFixed(1)}</strong>
             </div>
+            <div className="boardmap-helper" style={{ fontSize: "0.78rem" }}>{reviews} reviews</div>
           </div>
         </div>
 
-        {/* Owner Info */}
-        <div className="flex items-center justify-between text-[#597445] pt-2">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-[#e7f0dc] rounded-full flex items-center justify-center">
-              <span className="font-['Rethink_Sans:Medium',sans-serif] text-[10px] text-[#79ac78]">
-                {property.ownerName?.charAt(0).toUpperCase()}
-              </span>
-            </div>
-            <span className="font-['Rethink_Sans:Medium',sans-serif] text-[12px]">
-              {property.ownerName}
-            </span>
-          </div>
-          <span className="font-['Rethink_Sans:Medium',sans-serif] text-[12px]">
-            {property.gender}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "0.6rem",
+            paddingTop: "0.58rem",
+            borderTop: "1px solid rgba(47, 106, 69, 0.12)",
+          }}
+        >
+          <span className="boardmap-helper" style={{ fontSize: "0.8rem" }}>Hosted by {ownerName}</span>
+          <span className="boardmap-button-secondary" style={{ padding: "0.5rem 0.78rem", fontSize: "0.88rem" }}>
+            View details
           </span>
         </div>
       </div>
-    </div>
+    </button>
   );
 }

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { SlidersHorizontal, Star, X } from "lucide-react";
 import { FilterOptions } from "../utils/api";
 
 interface FilterModalProps {
@@ -6,6 +7,57 @@ interface FilterModalProps {
   onClose: () => void;
   filters: FilterOptions;
   onApply: (filters: FilterOptions) => void;
+}
+
+const propertyTypes = [
+  "Studio",
+  "Private Room",
+  "Shared Room",
+  "Bed Space",
+  "Apartment",
+];
+
+const genders = ["Male", "Female", "Any"];
+const availabilityOptions = ["Available", "Occupied"];
+const amenities = [
+  "WiFi",
+  "Air Conditioning",
+  "Kitchen",
+  "Parking",
+  "Laundry",
+  "Security",
+  "Study Desk",
+  "Free Water",
+  "Free Electricity",
+  "Television",
+  "Comfort Room",
+  "Smoking Allowed",
+  "Pets Allowed",
+  "No Curfew",
+  "Visitors Allowed",
+];
+
+const ratingOptions = [0, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5];
+
+function ToggleChip({
+  active,
+  label,
+  onClick,
+}: {
+  active: boolean;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`boardmap-chip ${active ? "boardmap-chip-active" : ""}`}
+      style={{ border: "1px solid rgba(47, 106, 69, 0.12)" }}
+    >
+      {label}
+    </button>
+  );
 }
 
 export default function FilterModal({
@@ -16,7 +68,16 @@ export default function FilterModal({
 }: FilterModalProps) {
   const [localFilters, setLocalFilters] = useState<FilterOptions>(filters);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    setLocalFilters(filters);
+  }, [filters]);
+
+  if (!isOpen) {
+    return null;
+  }
+
+  const toggleArrayFilter = (array: string[], value: string) =>
+    array.includes(value) ? array.filter((entry) => entry !== value) : [...array, value];
 
   const handleApply = () => {
     onApply(localFilters);
@@ -36,295 +97,208 @@ export default function FilterModal({
     onApply(resetFilters);
   };
 
-  const toggleArrayFilter = (array: string[], value: string) => {
-    if (array.includes(value)) {
-      return array.filter((v) => v !== value);
-    } else {
-      return [...array, value];
-    }
-  };
-
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[150] pt-20 md:pt-24 p-4">
-      <div className="bg-[#e7f0dc] rounded-[20px] shadow-[0px_0px_20px_0px_rgba(89,116,69,0.3)] w-full max-w-[90vw] md:max-w-[600px] max-h-[90vh] overflow-y-auto z-[10001] mt-4">
-        <div className="sticky top-0 bg-[#e7f0dc] border-b-4 border-[#597445] p-4 md:p-6 z-10 rounded-t-[20px]">
-          <div className="flex items-center justify-between">
-            <h2 className="font-['REM:SemiBold',sans-serif] text-[24px] md:text-[32px] text-[#4f6f52]">
-              Filters
-            </h2>
+    <div className="boardmap-modal-overlay" onClick={onClose}>
+      <div className="boardmap-modal" onClick={(event) => event.stopPropagation()}>
+        <div className="boardmap-panel-strong boardmap-modal-body boardmap-scroll" style={{ padding: "1.4rem" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "1rem",
+              marginBottom: "1.25rem",
+            }}
+          >
+            <div>
+              <span className="boardmap-eyebrow">
+                <SlidersHorizontal size={16} />
+                Refine results
+              </span>
+              <h2 className="boardmap-section-title" style={{ marginTop: "0.9rem" }}>
+                Tune the listing view without losing your place.
+              </h2>
+            </div>
             <button
+              type="button"
               onClick={onClose}
-              className="text-[#597445] hover:opacity-100 transition-opacity text-3xl leading-none"
+              className="boardmap-button-secondary"
+              style={{ paddingInline: "0.95rem", minWidth: 46 }}
             >
-              ✕
+              <X size={18} />
             </button>
           </div>
-        </div>
 
-        <div className="p-4 md:p-6 space-y-6">
-          {/* Price Range */}
-          <div>
-            <label className="font-['Rethink_Sans:SemiBold',sans-serif] text-[16px] md:text-[18px] text-[#4f6f52] block mb-3">
-              Price Range
-            </label>
-            <div className="space-y-3">
-              <div className="flex items-center gap-4">
+          <div className="boardmap-form-grid">
+            <section className="boardmap-panel" style={{ padding: "1rem" }}>
+              <label className="boardmap-label">Price range</label>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "minmax(0, 1fr) auto minmax(0, 1fr)",
+                  gap: "0.75rem",
+                  alignItems: "center",
+                  marginTop: "0.75rem",
+                }}
+              >
                 <input
+                  className="boardmap-input"
                   type="number"
                   value={localFilters.priceRange[0]}
-                  onChange={(e) =>
-                    setLocalFilters({
-                      ...localFilters,
-                      priceRange: [
-                        parseInt(e.target.value) || 0,
-                        localFilters.priceRange[1],
-                      ],
-                    })
+                  onChange={(event) =>
+                    setLocalFilters((current) => ({
+                      ...current,
+                      priceRange: [Number(event.target.value) || 0, current.priceRange[1]],
+                    }))
                   }
                   placeholder="Min"
-                  className="bg-white border-2 border-[#597445] rounded-[10px] px-4 py-2 w-full text-[#4f6f52] outline-none focus:ring-2 focus:ring-[#79ac78]"
                 />
-                <span className="text-[#4f6f52]">1</span>
+                <span className="boardmap-helper">to</span>
                 <input
+                  className="boardmap-input"
                   type="number"
                   value={localFilters.priceRange[1]}
-                  onChange={(e) =>
-                    setLocalFilters({
-                      ...localFilters,
-                      priceRange: [
-                        localFilters.priceRange[0],
-                        parseInt(e.target.value) || 10000,
-                      ],
-                    })
+                  onChange={(event) =>
+                    setLocalFilters((current) => ({
+                      ...current,
+                      priceRange: [current.priceRange[0], Number(event.target.value) || 10000],
+                    }))
                   }
                   placeholder="Max"
-                  className="bg-white border-2 border-[#597445] rounded-[10px] px-4 py-2 w-full text-[#4f6f52] outline-none focus:ring-2 focus:ring-[#79ac78]"
                 />
               </div>
               <input
+                style={{ width: "100%", marginTop: "0.9rem", accentColor: "#2f6a45" }}
                 type="range"
                 min="0"
                 max="10000"
                 step="100"
                 value={localFilters.priceRange[1]}
-                onChange={(e) =>
-                  setLocalFilters({
-                    ...localFilters,
-                    priceRange: [
-                      localFilters.priceRange[0],
-                      parseInt(e.target.value),
-                    ],
-                  })
+                onChange={(event) =>
+                  setLocalFilters((current) => ({
+                    ...current,
+                    priceRange: [current.priceRange[0], Number(event.target.value)],
+                  }))
                 }
-                className="w-full accent-[#79ac78]"
               />
-            </div>
-          </div>
+            </section>
 
-          {/* Property Type */}
-          <div>
-            <label className="font-['Rethink_Sans:SemiBold',sans-serif] text-[16px] md:text-[18px] text-[#4f6f52] block mb-3">
-              Property Type
-            </label>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
-              {[
-                "Studio",
-                "Private Room",
-                "Shared Room",
-                "Bed Space",
-                "Apartment",
-              ].map((type) => (
-                <button
-                  key={type}
-                  onClick={() =>
-                    setLocalFilters({
-                      ...localFilters,
-                      propertyTypes: toggleArrayFilter(
-                        localFilters.propertyTypes,
-                        type
-                      ),
-                    })
-                  }
-                  className={`px-3 md:px-4 py-2 rounded-[10px] font-['Rethink_Sans:Medium',sans-serif] text-[14px] md:text-[16px] transition-all ${
-                    localFilters.propertyTypes.includes(type)
-                      ? "bg-[#79ac78] text-white shadow-[0px_0px_10px_0px_rgba(121,172,120,0.5)]"
-                      : "bg-white text-[#597445] border-2 border-[#597445]"
-                  }`}
-                >
-                  {type}
-                </button>
-              ))}
-            </div>
-          </div>
+            <section className="boardmap-panel" style={{ padding: "1rem" }}>
+              <label className="boardmap-label">Property type</label>
+              <div className="boardmap-chip-row" style={{ marginTop: "0.8rem" }}>
+                {propertyTypes.map((type) => (
+                  <ToggleChip
+                    key={type}
+                    label={type}
+                    active={localFilters.propertyTypes.includes(type)}
+                    onClick={() =>
+                      setLocalFilters((current) => ({
+                        ...current,
+                        propertyTypes: toggleArrayFilter(current.propertyTypes, type),
+                      }))
+                    }
+                  />
+                ))}
+              </div>
+            </section>
 
-          {/* Gender Preference */}
-          <div>
-            <label className="font-['Rethink_Sans:SemiBold',sans-serif] text-[16px] md:text-[18px] text-[#4f6f52] block mb-3">
-              Gender Preference
-            </label>
-            <div className="flex gap-2 md:gap-3">
-              {["Male", "Female", "Any"].map((gender) => (
-                <button
-                  key={gender}
-                  onClick={() =>
-                    setLocalFilters({
-                      ...localFilters,
-                      gender: toggleArrayFilter(localFilters.gender, gender),
-                    })
-                  }
-                  className={`flex-1 px-3 md:px-4 py-2 rounded-[10px] font-['Rethink_Sans:Medium',sans-serif] text-[14px] md:text-[16px] transition-all ${
-                    localFilters.gender.includes(gender)
-                      ? "bg-[#79ac78] text-white shadow-[0px_0px_10px_0px_rgba(121,172,120,0.5)]"
-                      : "bg-white text-[#597445] border-2 border-[#597445]"
-                  }`}
-                >
-                  {gender}
-                </button>
-              ))}
-            </div>
-          </div>
+            <section className="boardmap-panel" style={{ padding: "1rem" }}>
+              <label className="boardmap-label">Gender preference</label>
+              <div className="boardmap-chip-row" style={{ marginTop: "0.8rem" }}>
+                {genders.map((gender) => (
+                  <ToggleChip
+                    key={gender}
+                    label={gender}
+                    active={localFilters.gender.includes(gender)}
+                    onClick={() =>
+                      setLocalFilters((current) => ({
+                        ...current,
+                        gender: toggleArrayFilter(current.gender, gender),
+                      }))
+                    }
+                  />
+                ))}
+              </div>
+            </section>
 
-          {/* Amenities */}
-          <div>
-            <label className="font-['Rethink_Sans:SemiBold',sans-serif] text-[16px] md:text-[18px] text-[#4f6f52] block mb-3">
-              Amenities
-            </label>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
-              {[
-                "WiFi",
-                "Air Conditioning",
-                "Kitchen",
-                "Parking",
-                "Laundry",
-                "Security",
-                "Study Desk",
-                "Free Water",
-                "Free Electricity",
-                "Television",
-                "Comfort Room",
-                "Smoking Allowed",
-                "Pets Allowed",
-                "No Curfew",
-                "Visitors Allowed",
-              ].map((amenity) => (
-                <button
-                  key={amenity}
-                  onClick={() =>
-                    setLocalFilters({
-                      ...localFilters,
-                      amenities: toggleArrayFilter(
-                        localFilters.amenities,
-                        amenity
-                      ),
-                    })
-                  }
-                  className={`px-3 md:px-4 py-2 rounded-[10px] font-['Rethink_Sans:Medium',sans-serif] text-[13px] md:text-[15px] transition-all ${
-                    localFilters.amenities.includes(amenity)
-                      ? "bg-[#79ac78] text-white shadow-[0px_0px_10px_0px_rgba(121,172,120,0.5)]"
-                      : "bg-white text-[#597445] border-2 border-[#597445]"
-                  }`}
-                >
-                  {amenity}
-                </button>
-              ))}
-            </div>
-          </div>
+            <section className="boardmap-panel" style={{ padding: "1rem" }}>
+              <label className="boardmap-label">Amenities</label>
+              <div className="boardmap-chip-row" style={{ marginTop: "0.8rem" }}>
+                {amenities.map((amenity) => (
+                  <ToggleChip
+                    key={amenity}
+                    label={amenity}
+                    active={localFilters.amenities.includes(amenity)}
+                    onClick={() =>
+                      setLocalFilters((current) => ({
+                        ...current,
+                        amenities: toggleArrayFilter(current.amenities, amenity),
+                      }))
+                    }
+                  />
+                ))}
+              </div>
+            </section>
 
-          {/* Availability */}
-          <div>
-            <label className="font-['Rethink_Sans:SemiBold',sans-serif] text-[16px] md:text-[18px] text-[#4f6f52] block mb-3">
-              Availability
-            </label>
-            <div className="flex gap-2 md:gap-3">
-              {["Available", "Occupied"].map((status) => (
-                <button
-                  key={status}
-                  onClick={() =>
-                    setLocalFilters({
-                      ...localFilters,
-                      availability: toggleArrayFilter(
-                        localFilters.availability,
-                        status
-                      ),
-                    })
-                  }
-                  className={`flex-1 px-3 md:px-4 py-2 rounded-[10px] font-['Rethink_Sans:Medium',sans-serif] text-[14px] md:text-[16px] transition-all ${
-                    localFilters.availability.includes(status)
-                      ? "bg-[#79ac78] text-white shadow-[0px_0px_10px_0px_rgba(121,172,120,0.5)]"
-                      : "bg-white text-[#597445] border-2 border-[#597445]"
-                  }`}
-                >
-                  {status}
-                </button>
-              ))}
-            </div>
-          </div>
+            <section className="boardmap-panel" style={{ padding: "1rem" }}>
+              <label className="boardmap-label">Availability</label>
+              <div className="boardmap-chip-row" style={{ marginTop: "0.8rem" }}>
+                {availabilityOptions.map((status) => (
+                  <ToggleChip
+                    key={status}
+                    label={status}
+                    active={localFilters.availability.includes(status)}
+                    onClick={() =>
+                      setLocalFilters((current) => ({
+                        ...current,
+                        availability: toggleArrayFilter(current.availability, status),
+                      }))
+                    }
+                  />
+                ))}
+              </div>
+            </section>
 
-          {/* Minimum Rating */}
-          <div>
-            <label className="font-['Rethink_Sans:SemiBold',sans-serif] text-[16px] md:text-[18px] text-[#4f6f52] block mb-3">
-              Rating
-            </label>
-            <div className="space-y-2">
-              {/* First row: 0, 1.0, 1.5, 2.0, 2.5, 3.0 */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {[0, 1.0, 1.5, 2.0, 2.5, 3.0].map((rating) => (
+            <section className="boardmap-panel" style={{ padding: "1rem" }}>
+              <label className="boardmap-label">Minimum rating</label>
+              <div className="boardmap-chip-row" style={{ marginTop: "0.8rem" }}>
+                {ratingOptions.map((rating) => (
                   <button
                     key={rating}
+                    type="button"
                     onClick={() =>
-                      setLocalFilters({
-                        ...localFilters,
+                      setLocalFilters((current) => ({
+                        ...current,
                         rating,
-                      })
+                      }))
                     }
-                    className={`px-2 py-2 rounded-[10px] font-['Rethink_Sans:Medium',sans-serif] text-[12px] md:text-[14px] transition-all ${
-                      localFilters.rating === rating
-                        ? "bg-[#79ac78] text-white shadow-[0px_0px_10px_0px_rgba(121,172,120,0.5)]"
-                        : "bg-white text-[#597445] border-2 border-[#597445]"
+                    className={`boardmap-chip ${
+                      localFilters.rating === rating ? "boardmap-chip-active" : ""
                     }`}
+                    style={{ border: "1px solid rgba(47, 106, 69, 0.12)" }}
                   >
-                    {rating}★
+                    <Star size={14} />
+                    {rating === 0 ? "Any rating" : `${rating}+`}
                   </button>
                 ))}
               </div>
-
-              {/* Second row: 3.5, 4.0, 4.5, 5.0 */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {[3.5, 4.0, 4.5, 5.0].map((rating) => (
-                  <button
-                    key={rating}
-                    onClick={() =>
-                      setLocalFilters({
-                        ...localFilters,
-                        rating,
-                      })
-                    }
-                    className={`px-2 py-2 rounded-[10px] font-['Rethink_Sans:Medium',sans-serif] text-[12px] md:text-[14px] transition-all ${
-                      localFilters.rating === rating
-                        ? "bg-[#79ac78] text-white shadow-[0px_0px_10px_0px_rgba(121,172,120,0.5)]"
-                        : "bg-white text-[#597445] border-2 border-[#597445]"
-                    }`}
-                  >
-                    {rating}★
-                  </button>
-                ))}
-              </div>
-            </div>
+            </section>
           </div>
 
-          {/* Buttons */}
-          <div className="flex gap-3 pt-4">
-            <button
-              onClick={handleReset}
-              className="flex-1 bg-white text-[#597445] border-2 border-[#597445] rounded-[15px] px-4 py-3 font-['Rethink_Sans:SemiBold',sans-serif] text-[16px] md:text-[18px] hover:bg-[#f5f5f5] transition-colors"
-            >
-              Reset
+          <div
+            style={{
+              display: "flex",
+              gap: "0.75rem",
+              justifyContent: "flex-end",
+              marginTop: "1.2rem",
+              flexWrap: "wrap",
+            }}
+          >
+            <button type="button" onClick={handleReset} className="boardmap-button-secondary">
+              Reset filters
             </button>
-            <button
-              onClick={handleApply}
-              className="flex-1 bg-[#4f6f52] text-white rounded-[15px] px-4 py-3 font-['Rethink_Sans:SemiBold',sans-serif] text-[16px] md:text-[18px] hover:bg-[#3d5841] transition-colors"
-            >
-              Apply Filters
+            <button type="button" onClick={handleApply} className="boardmap-button-primary">
+              Apply filters
             </button>
           </div>
         </div>
