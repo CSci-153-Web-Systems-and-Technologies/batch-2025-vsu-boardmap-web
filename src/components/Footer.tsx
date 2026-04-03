@@ -1,130 +1,124 @@
-import svgPaths from "../imports/svg-0x5486gjrj";
+import { Mail, MapPin, Phone } from "lucide-react";
 
-function Home() {
-  return (
-    <div className="[grid-area:1_/_1] ml-[5.172px] mt-[5.172px] relative size-[30.172px]">
-      <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 31 31">
-        <g id="Home">
-          <path d={svgPaths.p3ffc9300} id="Icon" stroke="var(--stroke-0, #597445)" strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" />
-        </g>
-      </svg>
-    </div>
-  );
-}
-
-function IconLogo() {
-  return (
-    <div className="[grid-area:1_/_1] grid-cols-[max-content] grid-rows-[max-content] inline-grid ml-0 mt-0 place-items-start relative">
-      <div className="[grid-area:1_/_1] bg-[#f3f3f3] ml-0 mt-0 rounded-[10px] size-[41.007px]" />
-      <Home />
-    </div>
-  );
-}
-
-function LogoWithText() {
-  return (
-    <div className="grid-cols-[max-content] grid-rows-[max-content] inline-grid leading-[0] place-items-start relative shrink-0">
-      <IconLogo />
-      <div className="[grid-area:1_/_1] flex flex-col font-['REM:SemiBold',sans-serif] font-semibold h-[31.035px] justify-center ml-[120.69px] mt-[21.553px] relative text-[#f3f3f3] text-[20px] md:text-[28px] text-center translate-x-[-50%] translate-y-[-50%] w-[158.621px]">
-        <p className="leading-[normal]">BoardMap</p>
-      </div>
-    </div>
-  );
-}
-
-function MarkEmailUnread() {
-  return (
-    <div className="relative shrink-0 size-[18px]">
-      <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 18 18">
-        <g id="mark_email_unread">
-          <path d={svgPaths.p13b02200} fill="var(--fill-0, #F3F3F3)" id="icon" />
-        </g>
-      </svg>
-    </div>
-  );
-}
-
-function PhoneIcon() {
-  return (
-    <div className="h-[11.336px] relative shrink-0 w-[11.314px]">
-      <div className="absolute inset-[-17.64%_-17.68%]">
-        <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 16 16">
-          <path d={svgPaths.p25587780} id="Icon" stroke="var(--stroke-0, #F3F3F3)" strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" />
-        </svg>
-      </div>
-    </div>
-  );
-}
+const quickLinks = [
+  "Browse stays",
+  "Compare listings",
+  "Track inquiries",
+  "Manage rooms",
+];
 
 export default function Footer() {
   return (
-    <div className="bg-[#597445] box-border w-full py-6 md:py-[24px] px-4 md:px-[24px]">
-      <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12 lg:gap-[220px]">
-          {/* Logo */}
-          <div className="content-stretch flex flex-col gap-[10px] items-start w-full md:w-[319px]">
-            <LogoWithText />
-            <p className="font-['Rethink_Sans:Regular',sans-serif] font-normal leading-normal text-[14px] md:text-[16px] text-white">
-              Connecting VSU students with quality boarding houses in the surrounding barangays.
-            </p>
-          </div>
-
-          {/* For Students */}
-          <div className="content-stretch flex flex-col gap-[10px] md:gap-[20px] items-start w-full md:w-[183px]">
-            <p className="font-['Rethink_Sans:Bold',sans-serif] font-bold leading-normal text-[18px] md:text-[20px] text-white">For Students</p>
-            <div className="content-stretch flex flex-col font-['Rethink_Sans:Regular',sans-serif] font-normal gap-[2px] items-start leading-normal text-[14px] md:text-[16px] text-white w-full">
-              <p>Find Boarding Houses</p>
-              <p>Browse by Location</p>
-              <p>Compare Prices</p>
-              <p>Read Reviews</p>
-            </div>
-          </div>
-
-          {/* For Owner */}
-          <div className="content-stretch flex flex-col gap-[10px] md:gap-[20px] items-start w-full md:w-[183px]">
-            <p className="font-['Rethink_Sans:Bold',sans-serif] font-bold leading-normal text-[18px] md:text-[20px] text-white">For Owner</p>
-            <div className="content-stretch flex flex-col font-['Rethink_Sans:Regular',sans-serif] font-normal gap-[2px] items-start leading-normal text-[14px] md:text-[16px] text-white w-full">
-              <p>List Your Property</p>
-              <p>Manage Bookings</p>
-              <p>Connect with Students</p>
-              <p>Update Availability</p>
-            </div>
-          </div>
-
-          {/* Contact us */}
-          <div className="content-stretch flex flex-col gap-[10px] md:gap-[20px] items-start w-full md:w-[271px]">
-            <p className="font-['Rethink_Sans:Bold',sans-serif] font-bold leading-normal text-[18px] md:text-[20px] text-white">Contact us</p>
-            <div className="content-stretch flex flex-col gap-[4px] items-start w-full">
-              <a 
-                href="mailto:support.boardmap@vsu.edu.ph"
-                className="content-stretch flex items-center gap-2 w-full hover:opacity-80 transition-opacity cursor-pointer group"
+    <footer style={{ padding: "1.35rem 1.2rem 1.8rem" }}>
+      <div className="boardmap-shell boardmap-shell-wide" style={{ padding: 0 }}>
+        <div className="boardmap-panel-dark" style={{ padding: "1.2rem" }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "minmax(0, 1.1fr) repeat(2, minmax(0, 0.85fr))",
+              gap: "1rem",
+            }}
+          >
+            <div>
+              <div className="boardmap-logo">
+                <img src="/BoardMap_Logo_White.png" alt="BoardMap logo" />
+                <div>
+                  <p className="boardmap-logo-title">BoardMap</p>
+                  <p className="boardmap-logo-tagline">
+                    Housing search designed for the VSU community
+                  </p>
+                </div>
+              </div>
+              <p
+                style={{
+                  margin: "0.8rem 0 0",
+                  color: "rgba(235,251,234,0.82)",
+                  lineHeight: 1.6,
+                  maxWidth: 390,
+                  fontSize: "0.9rem",
+                }}
               >
-                <MarkEmailUnread />
-                <p className="font-['Rethink_Sans:Regular',sans-serif] font-normal leading-normal text-[14px] md:text-[16px] text-white group-hover:underline">
-                  support.boardmap@vsu.edu.ph
-                </p>
-              </a>
-              <a
-                href="tel:+639152111698"
-                className="content-stretch flex gap-[7px] items-center w-full hover:opacity-80 transition-opacity cursor-pointer group"
-              >
-                <PhoneIcon />
-                <p className="font-['Rethink_Sans:Regular',sans-serif] font-normal leading-normal text-[14px] md:text-[16px] text-white group-hover:underline">
+                A green-first platform for students and owners who want clearer
+                information and stronger communication around boarding house search.
+              </p>
+            </div>
+
+            <div>
+              <strong style={{ display: "block", fontSize: "0.95rem" }}>What you can do</strong>
+              <div style={{ display: "grid", gap: "0.45rem", marginTop: "0.75rem" }}>
+                {quickLinks.map((item) => (
+                  <span
+                    key={item}
+                    style={{ color: "rgba(235,251,234,0.82)", fontSize: "0.9rem" }}
+                  >
+                    {item}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <strong style={{ display: "block", fontSize: "0.95rem" }}>Contact</strong>
+              <div style={{ display: "grid", gap: "0.65rem", marginTop: "0.75rem" }}>
+                <a
+                  href="mailto:support.boardmap@gmail.com"
+                  style={{
+                    display: "inline-flex",
+                    gap: "0.55rem",
+                    color: "rgba(235,251,234,0.92)",
+                    textDecoration: "none",
+                    fontSize: "0.9rem",
+                  }}
+                >
+                  <Mail size={16} />
+                  support.boardmap@gmail.com
+                </a>
+                <a
+                  href="tel:+639152111698"
+                  style={{
+                    display: "inline-flex",
+                    gap: "0.55rem",
+                    color: "rgba(235,251,234,0.92)",
+                    textDecoration: "none",
+                    fontSize: "0.9rem",
+                  }}
+                >
+                  <Phone size={16} />
                   +63 915 211 1698
-                </p>
-              </a>
+                </a>
+                <span
+                  style={{
+                    display: "inline-flex",
+                    gap: "0.55rem",
+                    color: "rgba(235,251,234,0.82)",
+                    fontSize: "0.9rem",
+                  }}
+                >
+                  <MapPin size={16} />
+                  Visayas State University, Baybay City, Leyte
+                </span>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Divider and Copyright */}
-        <div className="content-stretch flex flex-col gap-[13px] items-center mt-8 md:mt-12 w-full">
-          <div className="h-0 w-full border-t border-[#79AC78]" />
-          <p className="font-['Rethink_Sans:Medium',sans-serif] font-medium leading-normal text-[14px] md:text-[16px] text-center text-white">
-            © 2025 VSU BoardMap. Created by Christian Earl James N. Boyles. All rights reserved.
+          <div
+            style={{
+              height: 1,
+              background: "rgba(233,250,234,0.12)",
+              margin: "1.1rem 0 0.8rem",
+            }}
+          />
+          <p
+            style={{
+              margin: 0,
+              color: "rgba(235,251,234,0.7)",
+              fontSize: "0.82rem",
+            }}
+          >
+            Copyright 2026 BoardMap. Crafted for a cleaner campus housing experience.
           </p>
         </div>
       </div>
-    </div>
+    </footer>
   );
 }

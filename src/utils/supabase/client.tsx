@@ -1,56 +1,75 @@
-// client.tsx - FIXED VERSION
-import { createClient as createSupabaseClient } from '@supabase/supabase-js';
-import { projectId, publicAnonKey } from './info';
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { projectId, publicAnonKey, supabaseUrl } from "./info";
 
-// Create a singleton instance
 let supabaseInstance: ReturnType<typeof createSupabaseClient> | null = null;
 
-export function createClient() {
-  // Return existing client if it already exists
-  if (supabaseInstance) {
-    return supabaseInstance;
+function validateConfig() {
+  if (!projectId || projectId.includes(" ") || projectId.length < 10) {
+    throw new Error("Invalid Supabase project ID configuration");
   }
-  
-  console.log('Creating Supabase client for project:', projectId);
-  
-  const supabaseUrl = `https://${projectId}.supabase.co`;
-  
-  // Validate URL format
-  if (!projectId || projectId.includes(' ') || projectId.length < 10) {
-    console.error('Invalid Supabase project ID:', projectId);
-    throw new Error('Invalid Supabase project ID configuration');
-  }
-  
+
   if (!publicAnonKey || publicAnonKey.length < 20) {
-    console.error('Invalid Supabase anon key');
-    throw new Error('Invalid Supabase anon key configuration');
+    throw new Error("Invalid Supabase anon key configuration");
   }
-  
-  // Create the singleton instance
-  supabaseInstance = createSupabaseClient(supabaseUrl, publicAnonKey, {
+}
+
+function buildClientOptions(accessToken?: string) {
+  return {
     auth: {
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
-      flowType: 'pkce',
-      storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+      flowType: "pkce" as const,
+      storage: typeof window !== "undefined" ? window.localStorage : undefined,
     },
     global: {
+      headers: accessToken
+        ? {
+            Authorization: `Bearer ${accessToken}`,
+          }
+        : undefined,
       fetch: (...args) => {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
-
+        const timeoutId = setTimeout(() => controller.abort(), 12000);
         const [resource, init] = args as [RequestInfo, RequestInit?];
-        const mergedInit = { ...(init || {}), signal: controller.signal };
 
-        return fetch(resource, mergedInit)
-          .finally(() => clearTimeout(timeoutId));
-      }
-    }
-  });
-  
+        return fetch(resource, {
+          ...(init || {}),
+          signal: controller.signal,
+        }).finally(() => clearTimeout(timeoutId));
+      },
+    },
+  };
+}
+
+export function createClient() {
+  if (supabaseInstance) {
+    return supabaseInstance;
+  }
+
+  validateConfig();
+
+  supabaseInstance = createSupabaseClient(
+    supabaseUrl,
+    publicAnonKey,
+    buildClientOptions()
+  );
+
   return supabaseInstance;
 }
 
-// Create and export the singleton instance
+export function createAuthenticatedClient(accessToken?: string) {
+  validateConfig();
+
+  if (!accessToken) {
+    return createClient();
+  }
+
+  return createSupabaseClient(
+    supabaseUrl,
+    publicAnonKey,
+    buildClientOptions(accessToken)
+  );
+}
+
 export const supabase = createClient();

@@ -311,6 +311,11 @@ export default function App() {
     };
   }, []);
 
+  useEffect(() => {
+    document.body.classList.toggle("boardmap-lock-scroll", showMessaging);
+    return () => document.body.classList.remove("boardmap-lock-scroll");
+  }, [showMessaging]);
+
   if (loading) {
     return <LoadingScreen />;
   }
@@ -336,8 +341,11 @@ export default function App() {
 
       {/* Messaging Overlay */}
       {showMessaging && messageRecipient && user && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[10000000] p-4 md:p-6">
-          <div className="w-full max-w-3xl h-[80vh] md:h-[85vh]">
+        <div className="boardmap-modal-overlay" onClick={closeMessaging}>
+          <div
+            className="boardmap-panel-strong boardmap-message-dialog"
+            onClick={(event) => event.stopPropagation()}
+          >
             <MessagingPage
               userId={user.id}
               recipientId={messageRecipient.recipientId}
@@ -346,6 +354,7 @@ export default function App() {
               propertyTitle={messageRecipient.propertyTitle}
               accessToken={user.accessToken}
               onBack={closeMessaging}
+              mode="single"
             />
           </div>
         </div>
