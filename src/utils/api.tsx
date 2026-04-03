@@ -147,7 +147,7 @@ export async function uploadToStorage(
     console.log("Final filename for storage:", fileName);
 
     // Upload file to Supabase Storage
-    const { data, error } = await supabase.storage
+    const { error } = await supabase.storage
       .from("property-images")
       .upload(fileName, file, {
         cacheControl: "3600",
